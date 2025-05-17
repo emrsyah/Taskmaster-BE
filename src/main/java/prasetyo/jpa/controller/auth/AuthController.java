@@ -15,12 +15,10 @@ import org.springframework.web.bind.annotation.RestController;
 import jakarta.validation.Valid;
 import jakarta.validation.Validator;
 import lombok.extern.slf4j.Slf4j;
-import prasetyo.jpa.entity.Role;
 import prasetyo.jpa.entity.User;
 import prasetyo.jpa.helper.JwtHelper;
 import prasetyo.jpa.helper.ResponseHelper;
 import prasetyo.jpa.middleware.UseMiddleware;
-import prasetyo.jpa.repository.RoleRepository;
 import prasetyo.jpa.repository.UserRepository;
 import prasetyo.jpa.request.auth.LoginRequest;
 import prasetyo.jpa.request.auth.RegisterRequest;
@@ -40,9 +38,6 @@ public class AuthController {
   private JwtHelper jwtHelper;
 
   @Autowired
-  private RoleRepository roleRepository;
-
-  @Autowired
   private AddUserService addUserService;
 
   @Autowired
@@ -53,12 +48,10 @@ public class AuthController {
 
   @PostMapping(path = "/register")
   public ResponseEntity<Map<String, Object>> register(@Valid @RequestBody RegisterRequest request) throws Exception {
-    Role role = roleRepository.findById(2L).orElse(null);
     User user = new User();
+    user.setUsername(request.getEmail());
     user.setEmail(request.getEmail());
-    user.setName(request.getName());
     user.setPassword(bcrCryptPasswordEncoder.encode(request.getPassword()));
-    user.setRole(role);
 
     addUserService.handle(user);
 
@@ -75,10 +68,7 @@ public class AuthController {
 
     String token = jwtHelper.generateToken(user.getEmail());
 
-    user.setToken(token);
-    userRepository.save(user);
-
-    return responseHelper.success("Login berhasil", user.getToken());
+    return responseHelper.success("Login berhasil", token);
   }
 
   @GetMapping("/test")
