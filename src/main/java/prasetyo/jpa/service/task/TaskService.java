@@ -18,14 +18,6 @@ public class TaskService {
     @Autowired
     private RecurringTaskRepository recurringTaskRepository;
 
-    public RegularTask createRegularTask(RegularTask task) {
-        return regularTaskRepository.save(task);
-    }
-
-    public RecurringTask createRecurringTask(RecurringTask task) {
-        return recurringTaskRepository.save(task);
-    }
-
     public void deleteRegularTask(Long id) {
         regularTaskRepository.deleteById(id);
     }
@@ -105,7 +97,24 @@ public class TaskService {
     public void updateRecurringTask(RecurringTask task) {
         recurringTaskRepository.save(task);
     }
-    
-    
-    
+
+    public RegularTask createRegularTaskFromDto(prasetyo.jpa.request.task.CreateTaskRequest dto) {
+        RegularTask task = new RegularTask();
+        task.setTitle(dto.getTitle());
+        task.setDescription(dto.getDescription());
+        task.setPriority(dto.getPriority());
+        task.setDeadline(dto.getDeadline());
+        // Set other fields as needed, e.g., category, createdAt, etc.
+        return regularTaskRepository.save(task);
+    }
+
+    public RecurringTask createRecurringTaskFromDto(prasetyo.jpa.request.task.CreateTaskRequest dto) {
+        RecurringTask task = new RecurringTask();
+        task.setTitle(dto.getTitle());
+        task.setDescription(dto.getDescription());
+        task.setPriority(dto.getPriority());
+        task.setRecurrenceDays(dto.getRecurrenceDays());
+        // Set other fields as needed, e.g., category, createdAt, etc.
+        return recurringTaskRepository.save(task);
+    }
 }
