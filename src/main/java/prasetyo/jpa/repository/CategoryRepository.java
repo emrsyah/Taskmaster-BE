@@ -1,5 +1,6 @@
 package prasetyo.jpa.repository;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -9,6 +10,6 @@ import prasetyo.jpa.entity.Category;
 
 @Repository
 public interface CategoryRepository extends JpaRepository<Category, Long> {
-  public Optional<Category> findByToken(String token);
+  public Optional<List<Category>> findByToken(String token);
   public Optional<Category> findByIdCategory(String idCategory);
 }

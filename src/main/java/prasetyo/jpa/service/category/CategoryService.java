@@ -1,5 +1,7 @@
 package prasetyo.jpa.service.category;
 
+import java.util.List;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -13,5 +15,17 @@ public class CategoryService {
 
     public Category createCategory(Category category) {
         return categoryRepository.save(category);
+    }
+
+    public Category updateCategory(Category category) {
+        return categoryRepository.save(category);
+    }
+
+    public void deleteCategory(Long id) {
+        categoryRepository.deleteById(id);
+    }
+
+    public List<Category> getAllCategories(String token) {
+        return categoryRepository.findByToken(token).orElse(null);
     }
 }

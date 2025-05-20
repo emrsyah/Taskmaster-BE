@@ -6,8 +6,10 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import jakarta.persistence.Table;
 
 @Entity
+@Table(name = "categories")
 public class Category implements Archivable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -31,6 +33,10 @@ public class Category implements Archivable {
     @Override
     public boolean isArchived() {
         return isArchived;
+    }
+
+    public void setArchived(boolean archived) {
+        this.isArchived = archived;
     }
 
     @ManyToOne
