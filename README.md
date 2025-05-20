@@ -1,162 +1,156 @@
-# 🚀 BoilerplateSpringboot
+# Taskmaster Backend
 
-A ready-to-use Spring Boot boilerplate project that helps you get started **fast** with best practices like:
-
-- ✅ JWT-based Authentication  
-- 🔐 Role-based Authorization Middleware  
-- 🧠 Custom Validation (Exists & Unique)  
-- 🧾 Clean Response Formatting  
-- 🚨 Global Exception Handling  
-
-> Why write the same setup code again and again, when you can just fork this and start building? 😎
+Taskmaster is a powerful and modern backend API for managing your daily tasks and categories, built with Java Spring Boot. It provides secure authentication, robust validation, and a clean, modular structure to help you build productivity apps or integrate task management into your own projects.
 
 ---
 
-## 🔗 Repo Link
-
-📍 GitHub: [https://github.com/PrasGi/init-project-springboot](https://github.com/PrasGi/init-project-springboot)
-
----
-
-## 💡 Tech Stack
-
-- Java 21  
-- Spring Boot  
-- JPA (Hibernate)  
-- Lombok  
-- Slf4j  
-- JWT  
-- Custom Middleware  
-- Global Exception Handler  
+## 📖 What is Taskmaster?
+Taskmaster is the backend service for the Taskmaster app—a productivity tool that lets users create, organize, and manage regular and recurring tasks, as well as categorize them for better workflow. The backend is designed for reliability, security, and extensibility.
 
 ---
 
-## 📦 Features
-
-- 🧾 **Clean Response Helper**: Consistent response format for both success and error.  
-- 🔒 **JWT Authentication**: Stateless login with token generation and validation.  
-- 🧠 **Custom Validation Annotations**:  
-  - `@ExistsInDatabase`: Check if a value exists in DB.  
-  - `@UniqueValue`: Check if a value is unique in DB.  
-- 🛡️ **Middleware Support**: Use annotations to protect routes based on auth/roles.  
-- ⚠️ **Global Exception Handling**: Beautiful error responses, even for validation errors.  
-
----
-
-## 🚀 How to Use
-
-### 1. Clone the Repo
-
-```bash
-git clone https://github.com/PrasGi/init-project-springboot.git
-cd init-project-springboot
-```
-
-### 2. Set Up Database
-
-Edit `application.properties` or `application.yml`:
-
-```properties
-spring.datasource.url=jdbc:mysql://localhost:3306/your_db
-spring.datasource.username=root
-spring.datasource.password=your_password
-```
-
-### 3. Run the Project
-
-```bash
-./mvnw spring-boot:run
-```
-
-Or use your favorite IDE (IntelliJ, Eclipse, etc).
+## 🚩 Key Features
+- **User Authentication & Authorization**: Secure JWT-based login and role-based access control.
+- **Task Management**: Create, update, delete, and list both regular and recurring tasks.
+- **Category Management**: Organize tasks into categories, with full CRUD support.
+- **DTO-based Validation**: All create/update endpoints use DTOs for input validation, ensuring data integrity.
+- **Custom Validation Annotations**: Easily check for unique or existing values in the database.
+- **Middleware Support**: Protect routes with authentication and role checks using simple annotations.
+- **Consistent API Responses**: All responses follow a clean, predictable structure for easy frontend integration.
+- **Global Exception Handling**: Friendly error messages and validation feedback.
+- **Ready for Testing**: JUnit 5 and Mockito recommended for unit and integration tests.
 
 ---
 
-## 🔐 Auth Sample: Login
-
-### Endpoint
-
-```
-POST /login
-```
-
-### Request Body
-
-```json
-{
-  "email": "user@example.com",
-  "password": "secret123"
-}
-```
-
-### Response
-
-```json
-{
-  "status": true,
-  "statusCode": 200,
-  "message": "Login berhasil",
-  "data": "JWT_TOKEN_HERE"
-}
-```
+## 🗂️ Main Modules
+- **Authentication**: Register and login endpoints, JWT token generation.
+- **Tasks**: Endpoints for regular and recurring tasks, including filtering and archiving.
+- **Categories**: Endpoints for creating, updating, deleting, and listing categories.
 
 ---
 
-## 🛡️ Protecting Routes with Middleware
+## 📦 Example API Endpoints
 
-To secure endpoints using JWT and roles, use this annotation:
+### Auth
+- `POST /api/auth/register` — Register a new user
+- `POST /api/auth/login` — Login and receive a JWT token
 
+### Tasks
+- `POST /api/tasks` — Create a new task (regular or recurring)
+- `GET /api/tasks/regular` — List all regular tasks
+- `GET /api/tasks/recurring` — List all recurring tasks
+- `PUT /api/tasks/regular/{id}` — Update a regular task
+- `PUT /api/tasks/recurring/{id}` — Update a recurring task
+- `DELETE /api/tasks/regular/{id}` — Delete a regular task
+- `DELETE /api/tasks/recurring/{id}` — Delete a recurring task
+
+### Categories
+- `POST /api/categories` — Create a new category
+- `GET /api/categories` — List all categories
+- `PUT /api/categories/{id}` — Update a category
+- `DELETE /api/categories/{id}` — Delete a category
+
+---
+
+## 🧪 Testing
+
+Taskmaster is designed for easy testing. Use JUnit 5 for writing tests and Mockito for mocking dependencies.
+
+**Example Unit Test:**
 ```java
-@UseMiddleware(names = { "auth", "roles:user" })
+import org.junit.jupiter.api.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import prasetyo.jpa.service.category.CategoryService;
+import prasetyo.jpa.repository.CategoryRepository;
+import prasetyo.jpa.entity.Category;
+import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.extension.ExtendWith;
+
+@ExtendWith(MockitoExtension.class)
+public class CategoryServiceTest {
+    @Mock
+    private CategoryRepository categoryRepository;
+    @InjectMocks
+    private CategoryService categoryService;
+    @Test
+    public void testCreateCategory() {
+        Category category = new Category();
+        category.setName("Test Category");
+        when(categoryRepository.save(any(Category.class))).thenReturn(category);
+        Category created = categoryService.createCategory(category);
+        assertNotNull(created);
+        assertEquals("Test Category", created.getName());
+    }
+}
 ```
+
+**Run all tests:**
+```bash
+./mvnw test
+```
+
+---
+
+## ⚙️ Getting Started
+
+1. **Clone the Repo**
+   ```bash
+   git clone https://github.com/emrsyah/Taskmaster-BE.git
+   cd Taskmaster-BE
+   ```
+2. **Configure the Database**
+   Edit `src/main/resources/application.properties`:
+   ```properties
+   spring.datasource.url=jdbc:mysql://localhost:3306/your_db
+   spring.datasource.username=root
+   spring.datasource.password=your_password
+   ```
+3. **Run the App**
+   ```bash
+   ./mvnw spring-boot:run
+   ```
+   Or use your favorite IDE.
+
+---
+
+## 🛡️ Security & Middleware
+- Use `@UseMiddleware(names = { "auth", "roles:user" })` to protect endpoints.
+- JWT tokens are required for most task and category operations.
 
 ---
 
 ## 🧠 Custom Validation
-
-### ExistsInDatabase
-
-```java
-@ExistsInDatabase(entity = User.class, field = "email", message = "Email not found")
-private String email;
-```
-
-### UniqueValue
-
-```java
-@UniqueValue(entity = User.class, field = "email", message = "Email already taken")
-private String email;
-```
+- `@ExistsInDatabase` — Ensures a value exists in the database.
+- `@UniqueValue` — Ensures a value is unique in the database.
 
 ---
 
-## ⚠️ Global Exception Handler
-
-Handles validation errors and returns consistent error structure:
-
-```json
-{
-  "status": false,
-  "statusCode": 400,
-  "message": "Failed validation",
-  "errors": {
-    "email": "Email already taken"
-  }
-}
+## 📁 Project Structure (Key Parts)
 ```
-
----
-
-## 🤝 Contributing
-
-Feel free to fork, clone, and send PRs.  
-Let’s make backend development faster and cleaner for everyone!
+src/main/java/prasetyo/jpa/
+├── controller/
+│   ├── auth/
+│   ├── category/
+│   └── task/
+├── entity/
+├── repository/
+├── request/
+│   ├── category/
+│   └── task/
+├── service/
+│   ├── category/
+│   └── task/
+...
+```
 
 ---
 
 ## 👨‍💻 Author
 
-Made with ☕ & ❤️ by [@PrasGi](https://github.com/PrasGi)
+Made with ☕ & ❤️ by [@emrsyah](https://github.com/emrsyah)
 
 ---
 
