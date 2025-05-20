@@ -10,7 +10,6 @@ import jakarta.persistence.Table;
 @Table(name = "recurring_tasks")
 public class RecurringTask extends AbstractTask {
     private List<String> recurrenceDays;
-    private List<Date> doneDates;
 
     private boolean isArchived;
 
@@ -29,6 +28,16 @@ public class RecurringTask extends AbstractTask {
     public boolean isArchived() {
         return isArchived;
     }
+
+    public List<String> getRecurrenceDays() {
+        return recurrenceDays;
+    }
+
+    public void setRecurrenceDays(List<String> recurrenceDays) {
+        this.recurrenceDays = recurrenceDays;
+    }
+    
+    
 
 
 }

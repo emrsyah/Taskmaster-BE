@@ -7,7 +7,7 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 
 @Entity
-@Table(name = "recurring_tasks")
+@Table(name = "regular_tasks")
 public class RegularTask extends AbstractTask {
     private Date deadline;
     private boolean isArchived;
@@ -27,6 +27,16 @@ public class RegularTask extends AbstractTask {
     public boolean isArchived() {
         return isArchived;
     }
+
+    public Date getDeadline() {
+        return deadline;
+    }
+
+    public void setDeadline(Date deadline) {
+        this.deadline = deadline;
+    }
+    
+    
 
 
     
