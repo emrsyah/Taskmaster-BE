@@ -48,6 +48,7 @@ public class AuthController {
 
   @PostMapping(path = "/register")
   public ResponseEntity<Map<String, Object>> register(@Valid @RequestBody RegisterRequest request) throws Exception {
+    log.info("Attempting registration for email: {}", request.getEmail());
     User user = new User();
     user.setUsername(request.getEmail());
     user.setEmail(request.getEmail());
@@ -55,18 +56,22 @@ public class AuthController {
 
     addUserService.handle(user);
 
+    log.info("Registration successful for email: {}", request.getEmail());
     return responseHelper.success("Success registration, please login");
   }
 
   @PostMapping("/login")
   public ResponseEntity<Map<String, Object>> login(@Valid @RequestBody LoginRequest request) throws Exception {
+    log.info("Login attempt for email: {}", request.getEmail());
     User user = userRepository.findByEmail(request.getEmail()).orElse(null);
 
     if (user == null || !bcrCryptPasswordEncoder.matches(request.getPassword(), user.getPassword())) {
+      log.warn("Login failed for email: {}", request.getEmail());
       return responseHelper.error("Email atau password salah", HttpStatus.UNAUTHORIZED);
     }
 
     String token = jwtHelper.generateToken(user.getEmail());
+    log.info("Login successful for email: {}. Generated JWT: {}", request.getEmail(), token);
 
     return responseHelper.success("Login berhasil", token);
   }
