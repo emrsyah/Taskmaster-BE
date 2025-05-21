@@ -40,7 +40,7 @@ public class CategoryController {
 
     @PutMapping("/{id}")
     public ResponseEntity<?> updateCategory(@PathVariable Long id, @Valid @RequestBody UpdateCategoryRequest request) {
-        Category category = categoryService.getAllCategories("") // You may want to implement a getCategoryById method
+        Category category = categoryService.getAllCategories()
             .stream().filter(c -> c.getId().equals(id)).findFirst().orElse(null);
         if (category == null) {
             return responseHelper.error("Category not found");
@@ -60,8 +60,8 @@ public class CategoryController {
     }
 
     @GetMapping
-    public ResponseEntity<List<Category>> getAllCategories(@RequestParam(required = false) String token) {
-        List<Category> categories = categoryService.getAllCategories(token);
+    public ResponseEntity<List<Category>> getAllCategories() {
+        List<Category> categories = categoryService.getAllCategories();
         return ResponseEntity.ok(categories);
     }
 }
