@@ -7,9 +7,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import prasetyo.jpa.entity.RegularTask;
+import prasetyo.jpa.entity.User;
 
 @Repository
 public interface RegularTaskRepository extends JpaRepository<RegularTask, Long> {
-  public Optional<List<RegularTask>> findByToken(String token);
-  public Optional<RegularTask> findByIdTask(Long idTask);
+    List<RegularTask> findByUser(User user);
 }

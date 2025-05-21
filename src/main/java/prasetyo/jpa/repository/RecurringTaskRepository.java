@@ -7,9 +7,9 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 import prasetyo.jpa.entity.RecurringTask;
+import prasetyo.jpa.entity.User;
 
 @Repository
 public interface RecurringTaskRepository extends JpaRepository<RecurringTask, Long> {
-  public Optional<List<RecurringTask>> findByToken(String token);
-  public Optional<RecurringTask> findByIdTask(String idTask);
+    List<RecurringTask> findByUser(User user);
 }

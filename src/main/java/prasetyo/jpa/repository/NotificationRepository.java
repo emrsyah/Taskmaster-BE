@@ -1,7 +1,5 @@
 package prasetyo.jpa.repository;
 
-import java.util.Optional;
-
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
@@ -9,5 +7,4 @@ import prasetyo.jpa.entity.Notification;
 
 @Repository
 public interface NotificationRepository extends JpaRepository<Notification, Long> {
-  public Optional<Notification> findByToken(String token);
 }

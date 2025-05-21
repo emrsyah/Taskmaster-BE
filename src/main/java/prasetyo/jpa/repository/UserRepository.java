@@ -9,6 +9,5 @@ import prasetyo.jpa.entity.User;
 
 @Repository
 public interface UserRepository extends JpaRepository<User, Long> {
-  public Optional<User> findByToken(String token);
   public Optional<User> findByEmail(String email);
 }
