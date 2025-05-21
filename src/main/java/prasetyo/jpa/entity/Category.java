@@ -7,9 +7,13 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import lombok.Getter;
+import lombok.Setter;
 
 @Entity
 @Table(name = "categories")
+@Getter
+@Setter
 public class Category implements Archivable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -35,45 +39,7 @@ public class Category implements Archivable {
         return isArchived;
     }
 
-    public void setArchived(boolean archived) {
-        this.isArchived = archived;
-    }
-
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;
-
-    public Long getId() {
-        return id;
-    }
-
-    public void setId(Long id) {
-        this.id = id;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-    
-    public String getColor() {
-        return color;
-    }
-
-    public void setColor(String color) {
-        this.color = color;
-    }
-    
-    
 }

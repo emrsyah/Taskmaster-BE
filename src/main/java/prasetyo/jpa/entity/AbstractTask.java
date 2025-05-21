@@ -6,8 +6,14 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.MappedSuperclass;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.JoinColumn;
+import lombok.Getter;
+import lombok.Setter;
 
 @MappedSuperclass
+@Getter
+@Setter
 public abstract class AbstractTask implements Archivable {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -20,27 +26,11 @@ public abstract class AbstractTask implements Archivable {
     private Date updatedAt;
     private int priority;
 
+    @ManyToOne
+    @JoinColumn(name = "category_id")
     private Category category;
 
-    
-
-    // Getters and setters (or use Lombok if you prefer)
-    public String getTitle() {
-        return title;
-    }
-    public void setTitle(String title) {
-        this.title = title;
-    }
-    public String getDescription() {
-        return description;
-    }
-    public void setDescription(String description) {
-        this.description = description;
-    }
-    public int getPriority() {
-        return priority;
-    }
-    public void setPriority(int priority) {
-        this.priority = priority;
-    }
+    @ManyToOne
+    @JoinColumn(name = "user_id")
+    private User user;
 }

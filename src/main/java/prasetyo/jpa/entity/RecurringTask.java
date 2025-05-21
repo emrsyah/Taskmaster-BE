@@ -4,15 +4,29 @@ import java.util.Date;
 import java.util.List;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.ElementCollection;
+import lombok.Getter;
+import lombok.Setter;
 
 @Entity
 @Table(name = "recurring_tasks")
+@Getter
+@Setter
 public class RecurringTask extends AbstractTask {
+    @ElementCollection
     private List<String> recurrenceDays;
 
-    private boolean isArchived;
+    @ElementCollection
+    private List<Date> doneDates;
 
+    @ManyToOne
+    @JoinColumn(name = "user_id")
+    private User user;
+
+    private boolean isArchived;
 
     @Override
     public void archive() {
@@ -28,16 +42,4 @@ public class RecurringTask extends AbstractTask {
     public boolean isArchived() {
         return isArchived;
     }
-
-    public List<String> getRecurrenceDays() {
-        return recurrenceDays;
-    }
-
-    public void setRecurrenceDays(List<String> recurrenceDays) {
-        this.recurrenceDays = recurrenceDays;
-    }
-    
-    
-
-
 }
