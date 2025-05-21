@@ -25,7 +25,11 @@ public class CategoryService {
         categoryRepository.deleteById(id);
     }
 
-    public List<Category> getAllCategories(String token) {
-        return categoryRepository.findByToken(token).orElse(null);
+    // public List<Category> getAllCategories(String token) {
+    //     return categoryRepository.findByToken(token).orElse(null);
+    // }
+
+    public List<Category> getAllCategories() {
+        return categoryRepository.findAll();
     }
 }
