@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.http.HttpStatus;
 
 import prasetyo.jpa.helper.ResponseHelper;
 
@@ -28,5 +29,10 @@ public class GlobalExceptionHandler {
         );
 
         return responseHelper.error("Failed validation", errors, false, 400);
+    }
+
+    @ExceptionHandler(UnauthorizedException.class)
+    public ResponseEntity<Map<String, Object>> handleUnauthorized(UnauthorizedException ex) {
+        return responseHelper.error(ex.getMessage(), null, false, HttpStatus.UNAUTHORIZED.value());
     }
 }
