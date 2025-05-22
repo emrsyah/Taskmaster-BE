@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import prasetyo.jpa.entity.RecurringTask;
@@ -13,7 +14,6 @@ import prasetyo.jpa.repository.RecurringTaskRepository;
 import prasetyo.jpa.repository.RegularTaskRepository;
 
 @Service
-@Transactional
 public class TaskService {
     @Autowired
     private RegularTaskRepository regularTaskRepository;
@@ -21,7 +21,7 @@ public class TaskService {
     @Autowired
     private RecurringTaskRepository recurringTaskRepository;
 
-    @Transactional(readOnly = true)
+    @Transactional(readOnly = true, propagation = Propagation.SUPPORTS)
     public RegularTask getRegularTask(Long id, User user) {
         RegularTask task = regularTaskRepository.findById(id).orElse(null);
         if (task == null) {
@@ -33,7 +33,7 @@ public class TaskService {
         return null;
     }
 
-    @Transactional(readOnly = true)
+    @Transactional(readOnly = true, propagation = Propagation.SUPPORTS)
     public RecurringTask getRecurringTask(Long id, User user) {
         RecurringTask task = recurringTaskRepository.findById(id).orElse(null);
         if (task == null) {
@@ -45,16 +45,17 @@ public class TaskService {
         return null;
     }
     
-    @Transactional(readOnly = true)
+    @Transactional(readOnly = true, propagation = Propagation.SUPPORTS)
     public List<RegularTask> getRegularTasks(User user) {
         return regularTaskRepository.findByUser(user);
     }
 
-    @Transactional(readOnly = true)
+    @Transactional(readOnly = true, propagation = Propagation.SUPPORTS)
     public List<RecurringTask> getRecurringTasks(User user) {
         return recurringTaskRepository.findByUser(user);
     }
 
+    @Transactional
     public void deleteRegularTask(Long id, User user) {
         RegularTask task = regularTaskRepository.findById(id).orElse(null);
         if (task != null && task.getUser().getId().equals(user.getId())) {
@@ -62,6 +63,7 @@ public class TaskService {
         }
     }
 
+    @Transactional
     public void deleteRecurringTask(Long id, User user) {
         RecurringTask task = recurringTaskRepository.findById(id).orElse(null);
         if (task != null && task.getUser().getId().equals(user.getId())) {
@@ -69,6 +71,7 @@ public class TaskService {
         }
     }
 
+    @Transactional
     public void archiveRegularTask(Long id) {
         RegularTask task = regularTaskRepository.findById(id).orElse(null);
         if (task != null) {
@@ -77,6 +80,7 @@ public class TaskService {
         }
     }
 
+    @Transactional
     public void archiveRecurringTask(Long id) {
         RecurringTask task = recurringTaskRepository.findById(id).orElse(null);
         if (task != null) {
@@ -85,6 +89,7 @@ public class TaskService {
         }
     }
 
+    @Transactional
     public void unarchiveRegularTask(Long id) {
         RegularTask task = regularTaskRepository.findById(id).orElse(null);
         if (task != null) {
@@ -93,6 +98,7 @@ public class TaskService {
         }
     }
 
+    @Transactional
     public void unarchiveRecurringTask(Long id) {
         RecurringTask task = recurringTaskRepository.findById(id).orElse(null);
         if (task != null) {
@@ -101,14 +107,17 @@ public class TaskService {
         }
     }
 
+    @Transactional
     public void updateRegularTask(RegularTask task) {
         regularTaskRepository.save(task);
     }
 
+    @Transactional
     public void updateRecurringTask(RecurringTask task) {
         recurringTaskRepository.save(task);
     }
 
+    @Transactional
     public RegularTask createRegularTaskFromDto(prasetyo.jpa.request.task.CreateTaskRequest dto, User user) {
         RegularTask task = new RegularTask();
         task.setTitle(dto.getTitle());
@@ -119,6 +128,7 @@ public class TaskService {
         return regularTaskRepository.save(task);
     }
 
+    @Transactional
     public RecurringTask createRecurringTaskFromDto(prasetyo.jpa.request.task.CreateTaskRequest dto, User user) {
         RecurringTask task = new RecurringTask();
         task.setTitle(dto.getTitle());

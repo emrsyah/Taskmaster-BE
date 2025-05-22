@@ -141,7 +141,7 @@ public class TaskController {
             return responseHelper.success("Fetched recurring task", recurringTask);
         }
 
-        // If neither found, return error
+        // If neither found, return 404 error
         return responseHelper.error("Task not found", HttpStatus.NOT_FOUND);
     }
 

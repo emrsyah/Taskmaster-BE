@@ -3,6 +3,7 @@ package prasetyo.jpa.helper;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 
@@ -27,12 +28,12 @@ public class ResponseHelper {
 
     // 2. message + data (status=true, statusCode=200)
     public <T> ResponseEntity<Map<String, Object>> success(String message, T data) {
-        return success(message, data, true, 200);
+        return success(message, data, true, HttpStatus.OK.value());
     }
 
     // 3. message only (data=null, status=true, statusCode=200)
     public ResponseEntity<Map<String, Object>> success(String message) {
-        return success(message, null, true, 200);
+        return success(message, null, true, HttpStatus.OK.value());
     }
 
     // ======= ERROR METHODS =======
@@ -40,7 +41,7 @@ public class ResponseHelper {
     // 1. Full parameter
     public <E> ResponseEntity<Map<String, Object>> error(String message, E errors, boolean status, int statusCode) {
         Map<String, Object> body = new HashMap<>();
-        body.put("status", status);
+        body.put("status", false);
         body.put("statusCode", statusCode);
         body.put("message", message);
         body.put("data", null);
@@ -48,13 +49,13 @@ public class ResponseHelper {
         return ResponseEntity.status(statusCode).body(body);
     }
 
-    // 2. message + errors (status=true, statusCode=200)
-    public <E> ResponseEntity<Map<String, Object>> error(String message, E errors) {
-        return error(message, errors, true, 200);
+    // 2. message + HttpStatus
+    public ResponseEntity<Map<String, Object>> error(String message, HttpStatus status) {
+        return error(message, status.getReasonPhrase(), false, status.value());
     }
 
-    // 3. message only (errors=null, status=true, statusCode=200)
+    // 3. message only (errors=null, status=false, statusCode=400)
     public ResponseEntity<Map<String, Object>> error(String message) {
-        return error(message, null, true, 200);
+        return error(message, null, false, HttpStatus.BAD_REQUEST.value());
     }
 }
