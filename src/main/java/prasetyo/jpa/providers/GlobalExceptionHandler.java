@@ -1,6 +1,7 @@
 package prasetyo.jpa.providers;
 
-import java.util.HashMap;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 
 import org.springframework.http.ResponseEntity;
@@ -22,13 +23,13 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, Object>> handleValidationErrors(MethodArgumentNotValidException ex) {
-        Map<String, String> errors = new HashMap<>();
+        List<String> errors = new ArrayList<>();
 
-        ex.getBindingResult().getFieldErrors().forEach(error ->
-            errors.put(error.getField(), error.getDefaultMessage())
+        ex.getBindingResult().getFieldErrors().forEach(error -> 
+            errors.add(error.getDefaultMessage())
         );
 
-        return responseHelper.error("Failed validation", errors, false, 400);
+        return responseHelper.error("Failed validation", errors, false, HttpStatus.BAD_REQUEST.value());
     }
 
     @ExceptionHandler(UnauthorizedException.class)
