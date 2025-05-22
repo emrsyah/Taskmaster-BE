@@ -37,12 +37,19 @@ Taskmaster is the backend service for the Taskmaster app—a productivity tool t
 
 ### Tasks
 - `POST /api/tasks` — Create a new task (regular or recurring)
-- `GET /api/tasks/regular` — List all regular tasks
-- `GET /api/tasks/recurring` — List all recurring tasks
-- `PUT /api/tasks/regular/{id}` — Update a regular task
-- `PUT /api/tasks/recurring/{id}` — Update a recurring task
+- `GET /api/tasks` — List all tasks (both regular and recurring)
+- `GET /api/tasks/{id}` — Get a specific task (either regular or recurring)
+- `PUT /api/tasks/{id}` — Update a task (either regular or recurring)
 - `DELETE /api/tasks/regular/{id}` — Delete a regular task
 - `DELETE /api/tasks/recurring/{id}` — Delete a recurring task
+- `PUT /api/tasks/{id}/start` — Mark a task as in progress
+- `PUT /api/tasks/{id}/complete` — Mark a task as completed
+
+Task Status Lifecycle:
+- PENDING (Initial state)
+- IN_PROGRESS (Task is being worked on)
+- COMPLETED (Task is done)
+- ARCHIVED (Task is archived)
 
 ### Categories
 - `POST /api/categories` — Create a new category
