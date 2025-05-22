@@ -15,28 +15,39 @@ import java.util.List;
 @NoArgsConstructor
 @Builder
 public class CreateTaskRequest {
-    @NotBlank
-    @Size(max = 255)
+    @NotBlank(message = "Title is required")
+    @Size(max = 255, message = "Title must be less than 255 characters")
     private String title;
 
-    @Size(max = 1000)
+    @NotBlank(message = "Description is required")
+    @Size(max = 1000, message = "Description must be less than 1000 characters")
     private String description;
 
-    private int priority;
+    @NotNull(message = "Priority is required")
+    private Integer priority;
 
     private Long categoryId;
 
-    @NotNull
+    @NotNull(message = "Task type is required")
     private TaskType taskType;
 
     // Fields specific to RegularTask
-    private Date deadline;
+    private Date deadline;  // Can be null for regular tasks
 
     // Fields specific to RecurringTask
+    @NotNull(message = "Recurrence days are required for recurring tasks")
     private List<String> recurrenceDays;
 
     public enum TaskType {
         REGULAR,
         RECURRING
+    }
+
+    // Custom validation to ensure recurrenceDays is provided for RECURRING tasks
+    public boolean isValid() {
+        if (taskType == TaskType.RECURRING && (recurrenceDays == null || recurrenceDays.isEmpty())) {
+            return false;
+        }
+        return true;
     }
 }

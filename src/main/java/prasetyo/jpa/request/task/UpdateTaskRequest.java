@@ -1,6 +1,7 @@
 package prasetyo.jpa.request.task;
 
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -25,6 +26,9 @@ public class UpdateTaskRequest {
     private int priority;
     private Long categoryId;
     private boolean isArchived;
+
+    @NotNull
+    private CreateTaskRequest.TaskType taskType;
 
     // Fields specific to RegularTask
     private Date deadline;

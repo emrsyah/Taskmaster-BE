@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -22,6 +23,7 @@ import prasetyo.jpa.entity.RegularTask;
 import prasetyo.jpa.entity.User;
 import prasetyo.jpa.helper.ResponseHelper;
 import prasetyo.jpa.request.task.CreateTaskRequest;
+import prasetyo.jpa.request.task.UpdateTaskRequest;
 import prasetyo.jpa.service.task.TaskService;
 import prasetyo.jpa.middleware.UseMiddleware;
 
@@ -44,14 +46,29 @@ public class TaskController {
     @UseMiddleware(names = { "auth" })
     public ResponseEntity<?> createTask(@Valid @RequestBody CreateTaskRequest request) {
         User user = (User) httpServletRequest.getAttribute("currentUser");
-        if (request.getTaskType() == CreateTaskRequest.TaskType.REGULAR) {
-            RegularTask createdTask = taskService.createRegularTaskFromDto(request, user);
-            return responseHelper.success("Regular task created successfully", createdTask);
-        } else if (request.getTaskType() == CreateTaskRequest.TaskType.RECURRING) {
-            RecurringTask createdTask = taskService.createRecurringTaskFromDto(request, user);
-            return responseHelper.success("Recurring task created successfully", createdTask);
-        } else {
-            return responseHelper.error("Invalid task type");
+        if (user == null) {
+            return responseHelper.error("Unauthorized", HttpStatus.UNAUTHORIZED);
+        }
+
+        try {
+            if (!request.isValid()) {
+                if (request.getTaskType() == CreateTaskRequest.TaskType.RECURRING) {
+                    return responseHelper.error("Recurrence days are required for recurring tasks", HttpStatus.BAD_REQUEST);
+                }
+                return responseHelper.error("Invalid task data", HttpStatus.BAD_REQUEST);
+            }
+
+            if (request.getTaskType() == CreateTaskRequest.TaskType.REGULAR) {
+                RegularTask createdTask = taskService.createRegularTaskFromDto(request, user);
+                return responseHelper.success("Regular task created successfully", createdTask);
+            } else if (request.getTaskType() == CreateTaskRequest.TaskType.RECURRING) {
+                RecurringTask createdTask = taskService.createRecurringTaskFromDto(request, user);
+                return responseHelper.success("Recurring task created successfully", createdTask);
+            } else {
+                return responseHelper.error("Invalid task type", HttpStatus.BAD_REQUEST);
+            }
+        } catch (IllegalArgumentException e) {
+            return responseHelper.error(e.getMessage(), HttpStatus.BAD_REQUEST);
         }
     }
 
@@ -162,6 +179,27 @@ public class TaskController {
         );
         
         return responseHelper.success("Fetched all tasks", allTasks);
+    }
+
+    @PutMapping("/{id}")
+    @UseMiddleware(names = { "auth" })
+    public ResponseEntity<Map<String, Object>> updateTask(@PathVariable Long id, @Valid @RequestBody UpdateTaskRequest request) {
+        User user = (User) httpServletRequest.getAttribute("currentUser");
+        if (user == null) {
+            return responseHelper.error("Unauthorized", HttpStatus.UNAUTHORIZED);
+        }
+
+        try {
+            Object updatedTask = taskService.updateTask(id, request, user);
+            if (updatedTask == null) {
+                return responseHelper.error("Task not found", HttpStatus.NOT_FOUND);
+            }
+
+            String taskType = request.getTaskType() == CreateTaskRequest.TaskType.REGULAR ? "regular" : "recurring";
+            return responseHelper.success(taskType + " task updated successfully", updatedTask);
+        } catch (IllegalArgumentException e) {
+            return responseHelper.error(e.getMessage(), HttpStatus.BAD_REQUEST);
+        }
     }
 
 }
