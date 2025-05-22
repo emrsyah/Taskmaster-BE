@@ -3,6 +3,7 @@ package prasetyo.jpa.entity;
 import java.util.Date;
 import java.util.List;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 import jakarta.persistence.ManyToOne;
@@ -18,6 +19,7 @@ public class RegularTask extends AbstractTask {
     private Date deadline;
     private boolean isArchived;
 
+    @JsonBackReference
     @ManyToOne
     @JoinColumn(name = "user_id")
     private User user;

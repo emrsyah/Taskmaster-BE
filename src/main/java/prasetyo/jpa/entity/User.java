@@ -1,5 +1,6 @@
 package prasetyo.jpa.entity;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -25,9 +26,11 @@ public class User {
   private String email;
   private String password;
 
+  @JsonManagedReference
   @OneToMany(mappedBy = "user")
   private List<RegularTask> taskList;
 
+  @JsonManagedReference
   @OneToMany(mappedBy = "user") 
   private List<Category> categoryList;
 }
