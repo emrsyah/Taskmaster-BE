@@ -1,6 +1,7 @@
 package prasetyo.jpa.service.task;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -188,6 +189,68 @@ public class TaskService {
         task.setUser(user);
         task.setCompleted(false);  // Default value
         task.setArchived(false);   // Default value
+        return recurringTaskRepository.save(task);
+    }
+
+    @Transactional
+    public Object toggleTaskDone(Long id, User user, boolean isDone) {
+        // First check if it's a regular task
+        RegularTask regularTask = getRegularTask(id, user);
+        if (regularTask != null) {
+            regularTask.setCompleted(isDone);
+            return regularTaskRepository.save(regularTask);
+        }
+
+        // Then check if it's a recurring task
+        RecurringTask recurringTask = getRecurringTask(id, user);
+        if (recurringTask != null) {
+            recurringTask.setCompleted(isDone);
+            if (isDone) {
+                if (recurringTask.getDoneDates() == null) {
+                    recurringTask.setDoneDates(new ArrayList<>());
+                }
+                recurringTask.getDoneDates().add(new Date());
+            }
+            return recurringTaskRepository.save(recurringTask);
+        }
+
+        return null;
+    }
+
+    @Transactional
+    public Object toggleTaskArchive(Long id, User user, boolean isArchived) {
+        // First check if it's a regular task
+        RegularTask regularTask = getRegularTask(id, user);
+        if (regularTask != null) {
+            if (isArchived) {
+                regularTask.archive();
+            } else {
+                regularTask.unarchive();
+            }
+            return regularTaskRepository.save(regularTask);
+        }
+
+        // Then check if it's a recurring task
+        RecurringTask recurringTask = getRecurringTask(id, user);
+        if (recurringTask != null) {
+            if (isArchived) {
+                recurringTask.archive();
+            } else {
+                recurringTask.unarchive();
+            }
+            return recurringTaskRepository.save(recurringTask);
+        }
+
+        return null;
+    }
+
+    @Transactional
+    public RegularTask updateRegularTask(RegularTask task) {
+        return regularTaskRepository.save(task);
+    }
+
+    @Transactional
+    public RecurringTask updateRecurringTask(RecurringTask task) {
         return recurringTaskRepository.save(task);
     }
 }

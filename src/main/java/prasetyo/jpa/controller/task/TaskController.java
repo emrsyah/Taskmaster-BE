@@ -202,4 +202,57 @@ public class TaskController {
         }
     }
 
+    @PutMapping("/{id}/start")
+    @UseMiddleware(names = { "auth" })
+    public ResponseEntity<Map<String, Object>> startTask(@PathVariable Long id) {
+        User user = (User) httpServletRequest.getAttribute("currentUser");
+        if (user == null) {
+            return responseHelper.error("Unauthorized", HttpStatus.UNAUTHORIZED);
+        }
+
+        // Try regular task first
+        RegularTask regularTask = taskService.getRegularTask(id, user);
+        if (regularTask != null) {
+            regularTask.markInProgress();
+            taskService.updateRegularTask(regularTask);
+            return responseHelper.success("Regular task started", regularTask);
+        }
+
+        // Then try recurring task
+        RecurringTask recurringTask = taskService.getRecurringTask(id, user);
+        if (recurringTask != null) {
+            recurringTask.markInProgress();
+            taskService.updateRecurringTask(recurringTask);
+            return responseHelper.success("Recurring task started", recurringTask);
+        }
+
+        return responseHelper.error("Task not found", HttpStatus.NOT_FOUND);
+    }
+
+    @PutMapping("/{id}/complete")
+    @UseMiddleware(names = { "auth" })
+    public ResponseEntity<Map<String, Object>> completeTask(@PathVariable Long id) {
+        User user = (User) httpServletRequest.getAttribute("currentUser");
+        if (user == null) {
+            return responseHelper.error("Unauthorized", HttpStatus.UNAUTHORIZED);
+        }
+
+        // Try regular task first
+        RegularTask regularTask = taskService.getRegularTask(id, user);
+        if (regularTask != null) {
+            regularTask.markCompleted();
+            taskService.updateRegularTask(regularTask);
+            return responseHelper.success("Regular task completed", regularTask);
+        }
+
+        // Then try recurring task
+        RecurringTask recurringTask = taskService.getRecurringTask(id, user);
+        if (recurringTask != null) {
+            recurringTask.markCompleted();
+            taskService.updateRecurringTask(recurringTask);
+            return responseHelper.success("Recurring task completed", recurringTask);
+        }
+
+        return responseHelper.error("Task not found", HttpStatus.NOT_FOUND);
+    }
 }
