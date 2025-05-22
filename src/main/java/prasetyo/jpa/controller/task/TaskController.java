@@ -51,19 +51,33 @@ public class TaskController {
         }
 
         try {
-            if (!request.isValid()) {
-                if (request.getTaskType() == CreateTaskRequest.TaskType.RECURRING) {
+            // Validate based on task type
+            if (request.getTaskType() == CreateTaskRequest.TaskType.RECURRING) {
+                if (request.getRecurrenceDays() == null || request.getRecurrenceDays().isEmpty()) {
                     return responseHelper.error("Recurrence days are required for recurring tasks", HttpStatus.BAD_REQUEST);
                 }
-                return responseHelper.error("Invalid task data", HttpStatus.BAD_REQUEST);
             }
 
             if (request.getTaskType() == CreateTaskRequest.TaskType.REGULAR) {
                 RegularTask createdTask = taskService.createRegularTaskFromDto(request, user);
-                return responseHelper.success("Regular task created successfully", createdTask);
+                return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(Map.of(
+                        "status", true,
+                        "statusCode", HttpStatus.CREATED.value(),
+                        "message", "Regular task created successfully",
+                        "data", createdTask,
+                        "errors", null
+                    ));
             } else if (request.getTaskType() == CreateTaskRequest.TaskType.RECURRING) {
                 RecurringTask createdTask = taskService.createRecurringTaskFromDto(request, user);
-                return responseHelper.success("Recurring task created successfully", createdTask);
+                return ResponseEntity.status(HttpStatus.CREATED)
+                    .body(Map.of(
+                        "status", true,
+                        "statusCode", HttpStatus.CREATED.value(),
+                        "message", "Recurring task created successfully",
+                        "data", createdTask,
+                        "errors", null
+                    ));
             } else {
                 return responseHelper.error("Invalid task type", HttpStatus.BAD_REQUEST);
             }
@@ -72,14 +86,14 @@ public class TaskController {
         }
     }
 
-    @DeleteMapping("/regular/{id}")
+    @DeleteMapping("/regular/{uuid}")
     @UseMiddleware(names = { "auth" })
-    public ResponseEntity<Map<String, Object>> deleteRegularTask(@PathVariable Long id) {
+    public ResponseEntity<Map<String, Object>> deleteRegularTask(@PathVariable String uuid) {
         User user = (User) httpServletRequest.getAttribute("currentUser");
         if (user == null) {
             return responseHelper.error("Unauthorized", HttpStatus.UNAUTHORIZED);
         }
-        taskService.deleteRegularTask(id, user);
+        taskService.deleteRegularTask(uuid, user);
         return responseHelper.success("Regular task deleted successfully");
     }
 
@@ -94,14 +108,14 @@ public class TaskController {
         return responseHelper.success("Fetched all regular tasks", tasks);
     }
 
-    @DeleteMapping("/recurring/{id}")
+    @DeleteMapping("/recurring/{uuid}")
     @UseMiddleware(names = { "auth" })
-    public ResponseEntity<Map<String, Object>> deleteRecurringTask(@PathVariable Long id) {
+    public ResponseEntity<Map<String, Object>> deleteRecurringTask(@PathVariable String uuid) {
         User user = (User) httpServletRequest.getAttribute("currentUser");
         if (user == null) {
             return responseHelper.error("Unauthorized", HttpStatus.UNAUTHORIZED);
         }
-        taskService.deleteRecurringTask(id, user);
+        taskService.deleteRecurringTask(uuid, user);
         return responseHelper.success("Recurring task deleted successfully");
     }
 
@@ -116,44 +130,50 @@ public class TaskController {
         return responseHelper.success("Fetched all recurring tasks", tasks);
     }
 
-    @GetMapping("/recurring/{id}")
+    @GetMapping("/recurring/{uuid}")
     @UseMiddleware(names = { "auth" })
-    public ResponseEntity<Map<String, Object>> getRecurringTask(@PathVariable Long id) {
+    public ResponseEntity<Map<String, Object>> getRecurringTask(@PathVariable String uuid) {
         User user = (User) httpServletRequest.getAttribute("currentUser");
         if (user == null) {
             return responseHelper.error("Unauthorized", HttpStatus.UNAUTHORIZED);
         }
-        RecurringTask task = taskService.getRecurringTask(id, user);
+        RecurringTask task = taskService.getRecurringTask(uuid, user);
+        if (task == null) {
+            return responseHelper.error("Task not found", HttpStatus.NOT_FOUND);
+        }
         return responseHelper.success("Fetched recurring task", task);
     }
 
-    @GetMapping("/regular/{id}")
+    @GetMapping("/regular/{uuid}")
     @UseMiddleware(names = { "auth" })
-    public ResponseEntity<Map<String, Object>> getRegularTask(@PathVariable Long id) {
+    public ResponseEntity<Map<String, Object>> getRegularTask(@PathVariable String uuid) {
         User user = (User) httpServletRequest.getAttribute("currentUser");
         if (user == null) {
             return responseHelper.error("Unauthorized", HttpStatus.UNAUTHORIZED);
         }
-        RegularTask task = taskService.getRegularTask(id, user);
+        RegularTask task = taskService.getRegularTask(uuid, user);
+        if (task == null) {
+            return responseHelper.error("Task not found", HttpStatus.NOT_FOUND);
+        }
         return responseHelper.success("Fetched regular task", task);
     }
 
-    @GetMapping("/{id}")
+    @GetMapping("/{uuid}")
     @UseMiddleware(names = { "auth" })
-    public ResponseEntity<Map<String, Object>> getTask(@PathVariable Long id) {
+    public ResponseEntity<Map<String, Object>> getTask(@PathVariable String uuid) {
         User user = (User) httpServletRequest.getAttribute("currentUser");
         if (user == null) {
             return responseHelper.error("Unauthorized", HttpStatus.UNAUTHORIZED);
         }
 
         // Try to find regular task first
-        RegularTask regularTask = taskService.getRegularTask(id, user);
+        RegularTask regularTask = taskService.getRegularTask(uuid, user);
         if (regularTask != null) {
             return responseHelper.success("Fetched regular task", regularTask);
         }
 
         // If regular task not found, try recurring task
-        RecurringTask recurringTask = taskService.getRecurringTask(id, user);
+        RecurringTask recurringTask = taskService.getRecurringTask(uuid, user);
         if (recurringTask != null) {
             return responseHelper.success("Fetched recurring task", recurringTask);
         }
@@ -181,16 +201,16 @@ public class TaskController {
         return responseHelper.success("Fetched all tasks", allTasks);
     }
 
-    @PutMapping("/{id}")
+    @PutMapping("/{uuid}")
     @UseMiddleware(names = { "auth" })
-    public ResponseEntity<Map<String, Object>> updateTask(@PathVariable Long id, @Valid @RequestBody UpdateTaskRequest request) {
+    public ResponseEntity<Map<String, Object>> updateTask(@PathVariable String uuid, @Valid @RequestBody UpdateTaskRequest request) {
         User user = (User) httpServletRequest.getAttribute("currentUser");
         if (user == null) {
             return responseHelper.error("Unauthorized", HttpStatus.UNAUTHORIZED);
         }
 
         try {
-            Object updatedTask = taskService.updateTask(id, request, user);
+            Object updatedTask = taskService.updateTask(uuid, request, user);
             if (updatedTask == null) {
                 return responseHelper.error("Task not found", HttpStatus.NOT_FOUND);
             }
@@ -202,16 +222,16 @@ public class TaskController {
         }
     }
 
-    @PutMapping("/{id}/start")
+    @PutMapping("/{uuid}/start")
     @UseMiddleware(names = { "auth" })
-    public ResponseEntity<Map<String, Object>> startTask(@PathVariable Long id) {
+    public ResponseEntity<Map<String, Object>> startTask(@PathVariable String uuid) {
         User user = (User) httpServletRequest.getAttribute("currentUser");
         if (user == null) {
             return responseHelper.error("Unauthorized", HttpStatus.UNAUTHORIZED);
         }
 
         // Try regular task first
-        RegularTask regularTask = taskService.getRegularTask(id, user);
+        RegularTask regularTask = taskService.getRegularTask(uuid, user);
         if (regularTask != null) {
             regularTask.markInProgress();
             taskService.updateRegularTask(regularTask);
@@ -219,7 +239,7 @@ public class TaskController {
         }
 
         // Then try recurring task
-        RecurringTask recurringTask = taskService.getRecurringTask(id, user);
+        RecurringTask recurringTask = taskService.getRecurringTask(uuid, user);
         if (recurringTask != null) {
             recurringTask.markInProgress();
             taskService.updateRecurringTask(recurringTask);
@@ -229,16 +249,16 @@ public class TaskController {
         return responseHelper.error("Task not found", HttpStatus.NOT_FOUND);
     }
 
-    @PutMapping("/{id}/complete")
+    @PutMapping("/{uuid}/complete")
     @UseMiddleware(names = { "auth" })
-    public ResponseEntity<Map<String, Object>> completeTask(@PathVariable Long id) {
+    public ResponseEntity<Map<String, Object>> completeTask(@PathVariable String uuid) {
         User user = (User) httpServletRequest.getAttribute("currentUser");
         if (user == null) {
             return responseHelper.error("Unauthorized", HttpStatus.UNAUTHORIZED);
         }
 
         // Try regular task first
-        RegularTask regularTask = taskService.getRegularTask(id, user);
+        RegularTask regularTask = taskService.getRegularTask(uuid, user);
         if (regularTask != null) {
             regularTask.markCompleted();
             taskService.updateRegularTask(regularTask);
@@ -246,7 +266,7 @@ public class TaskController {
         }
 
         // Then try recurring task
-        RecurringTask recurringTask = taskService.getRecurringTask(id, user);
+        RecurringTask recurringTask = taskService.getRecurringTask(uuid, user);
         if (recurringTask != null) {
             recurringTask.markCompleted();
             taskService.updateRecurringTask(recurringTask);
