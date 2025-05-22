@@ -1,171 +1,168 @@
-# Taskmaster Backend
+# TaskMaster API
 
-Taskmaster is a powerful and modern backend API for managing your daily tasks and categories, built with Java Spring Boot. It provides secure authentication, robust validation, and a clean, modular structure to help you build productivity apps or integrate task management into your own projects.
+A Spring Boot-based task management API that supports both regular and recurring tasks.
 
----
+## Features
 
-## 📖 What is Taskmaster?
-Taskmaster is the backend service for the Taskmaster app—a productivity tool that lets users create, organize, and manage regular and recurring tasks, as well as categorize them for better workflow. The backend is designed for reliability, security, and extensibility.
+- User authentication and authorization
+- Task management (regular and recurring tasks)
+- Task categorization
+- Task status tracking (pending, in progress, completed, archived)
+- Recurring task scheduling
+- Sequence number generation for tasks
 
----
+## Prerequisites
 
-## 🚩 Key Features
-- **User Authentication & Authorization**: Secure JWT-based login and role-based access control.
-- **Task Management**: Create, update, delete, and list both regular and recurring tasks.
-- **Category Management**: Organize tasks into categories, with full CRUD support.
-- **DTO-based Validation**: All create/update endpoints use DTOs for input validation, ensuring data integrity.
-- **Custom Validation Annotations**: Easily check for unique or existing values in the database.
-- **Middleware Support**: Protect routes with authentication and role checks using simple annotations.
-- **Consistent API Responses**: All responses follow a clean, predictable structure for easy frontend integration.
-- **Global Exception Handling**: Friendly error messages and validation feedback.
-- **Ready for Testing**: JUnit 5 and Mockito recommended for unit and integration tests.
+- Java 17 or higher
+- PostgreSQL 12 or higher
+- Maven 3.6 or higher
 
----
+## Setup
 
-## 🗂️ Main Modules
-- **Authentication**: Register and login endpoints, JWT token generation.
-- **Tasks**: Endpoints for regular and recurring tasks, including filtering and archiving.
-- **Categories**: Endpoints for creating, updating, deleting, and listing categories.
+1. Clone the repository:
+```bash
+git clone https://github.com/yourusername/taskmaster.git
+cd taskmaster
+```
 
----
+2. Create PostgreSQL database:
+```sql
+CREATE DATABASE taskmaster;
+```
 
-## 📦 Example API Endpoints
+3. Update `application.properties` with your database credentials:
+```properties
+spring.datasource.url=jdbc:postgresql://localhost:5432/taskmaster
+spring.datasource.username=your_username
+spring.datasource.password=your_password
+```
 
-### Auth
-- `POST /api/auth/register` — Register a new user
-- `POST /api/auth/login` — Login and receive a JWT token
+4. Run the application:
+```bash
+./mvnw spring-boot:run
+```
+
+## API Endpoints
+
+### Authentication
+- `POST /api/auth/register` - Register a new user
+- `POST /api/auth/login` - Login and get JWT token
+- `POST /api/auth/refresh` - Refresh JWT token
 
 ### Tasks
-- `POST /api/tasks` — Create a new task (regular or recurring)
-- `GET /api/tasks` — List all tasks (both regular and recurring)
-- `GET /api/tasks/{uuid}` — Get a specific task by UUID (either regular or recurring)
-- `PUT /api/tasks/{uuid}` — Update a task by UUID (either regular or recurring)
-- `DELETE /api/tasks/regular/{uuid}` — Delete a regular task by UUID
-- `DELETE /api/tasks/recurring/{uuid}` — Delete a recurring task by UUID
-- `PUT /api/tasks/{uuid}/start` — Mark a task as in progress
-- `PUT /api/tasks/{uuid}/complete` — Mark a task as completed
 
-Task Status Lifecycle:
-- PENDING (Initial state)
-- IN_PROGRESS (Task is being worked on)
-- COMPLETED (Task is done)
-- ARCHIVED (Task is archived)
+#### Create & Read
+- `POST /api/tasks` - Create a new task (regular or recurring)
+- `GET /api/tasks` - Get all tasks
+- `GET /api/tasks/{uuid}` - Get a specific task
+- `GET /api/tasks/regular` - Get all regular tasks
+- `GET /api/tasks/recurring` - Get all recurring tasks
 
-Task Identification:
-- Each task (both regular and recurring) has a unique UUID
-- The UUID is used for all operations (get, update, delete, etc.)
-- This ensures no ID conflicts between regular and recurring tasks
+#### Update & Delete
+- `PUT /api/tasks/{uuid}` - Update a task
+- `DELETE /api/tasks/{uuid}` - Delete a task
+
+#### Task Status Management
+- `PUT /api/tasks/{uuid}/start` - Mark task as in progress
+- `PUT /api/tasks/{uuid}/complete` - Mark task as completed
+- `PUT /api/tasks/{uuid}/undo-complete` - Undo task completion
+- `PUT /api/tasks/{uuid}/archive` - Archive a task
+- `PUT /api/tasks/{uuid}/unarchive` - Unarchive a task
 
 ### Categories
-- `POST /api/categories` — Create a new category
-- `GET /api/categories` — List all categories
-- `PUT /api/categories/{id}` — Update a category
-- `DELETE /api/categories/{id}` — Delete a category
+- `POST /api/categories` - Create a new category
+- `GET /api/categories` - Get all categories
+- `PUT /api/categories/{id}` - Update a category
+- `DELETE /api/categories/{id}` - Delete a category
 
----
+## Request/Response Examples
 
-## 🧪 Testing
-
-Taskmaster is designed for easy testing. Use JUnit 5 for writing tests and Mockito for mocking dependencies.
-
-**Example Unit Test:**
-```java
-import org.junit.jupiter.api.Test;
-import org.mockito.InjectMocks;
-import org.mockito.Mock;
-import org.mockito.junit.jupiter.MockitoExtension;
-import prasetyo.jpa.service.category.CategoryService;
-import prasetyo.jpa.repository.CategoryRepository;
-import prasetyo.jpa.entity.Category;
-import static org.mockito.Mockito.*;
-import static org.junit.jupiter.api.Assertions.*;
-import org.junit.jupiter.api.extension.ExtendWith;
-
-@ExtendWith(MockitoExtension.class)
-public class CategoryServiceTest {
-    @Mock
-    private CategoryRepository categoryRepository;
-    @InjectMocks
-    private CategoryService categoryService;
-    @Test
-    public void testCreateCategory() {
-        Category category = new Category();
-        category.setName("Test Category");
-        when(categoryRepository.save(any(Category.class))).thenReturn(category);
-        Category created = categoryService.createCategory(category);
-        assertNotNull(created);
-        assertEquals("Test Category", created.getName());
-    }
+### Create Regular Task
+```json
+POST /api/tasks
+{
+    "title": "Complete project documentation",
+    "description": "Write comprehensive documentation for the project",
+    "priority": 1,
+    "taskType": "REGULAR",
+    "deadline": "2025-06-01T00:00:00Z"
 }
 ```
 
-**Run all tests:**
+### Create Recurring Task
+```json
+POST /api/tasks
+{
+    "title": "Weekly team meeting",
+    "description": "Regular team sync-up",
+    "priority": 2,
+    "taskType": "RECURRING",
+    "recurrenceDays": ["MONDAY", "WEDNESDAY", "FRIDAY"]
+}
+```
+
+### Success Response
+```json
+{
+    "status": true,
+    "statusCode": 201,
+    "message": "Task created successfully",
+    "data": {
+        "uuid": "123e4567-e89b-12d3-a456-426614174000",
+        "title": "Complete project documentation",
+        "description": "Write comprehensive documentation for the project",
+        "priority": 1,
+        "status": "PENDING",
+        "sequenceNumber": 1,
+        // ... other fields
+    },
+    "errors": null
+}
+```
+
+## Error Handling
+
+The API uses standard HTTP status codes and returns detailed error messages:
+
+- 200: Success
+- 201: Created
+- 400: Bad Request
+- 401: Unauthorized
+- 403: Forbidden
+- 404: Not Found
+- 500: Internal Server Error
+
+Error Response Example:
+```json
+{
+    "status": false,
+    "statusCode": 400,
+    "message": "Invalid task data",
+    "data": null,
+    "errors": "Description is required"
+}
+```
+
+## Security
+
+- JWT-based authentication
+- Role-based access control
+- Secure password hashing
+- Request validation
+- CORS configuration
+
+## Development
+
+### Running Tests
 ```bash
 ./mvnw test
 ```
 
----
-
-## ⚙️ Getting Started
-
-1. **Clone the Repo**
-   ```bash
-   git clone https://github.com/emrsyah/Taskmaster-BE.git
-   cd Taskmaster-BE
-   ```
-2. **Configure the Database**
-   Edit `src/main/resources/application.properties`:
-   ```properties
-   spring.datasource.url=jdbc:mysql://localhost:3306/your_db
-   spring.datasource.username=root
-   spring.datasource.password=your_password
-   ```
-3. **Run the App**
-   ```bash
-   ./mvnw spring-boot:run
-   ```
-   Or use your favorite IDE.
-
----
-
-## 🛡️ Security & Middleware
-- Use `@UseMiddleware(names = { "auth", "roles:user" })` to protect endpoints.
-- JWT tokens are required for most task and category operations.
-
----
-
-## 🧠 Custom Validation
-- `@ExistsInDatabase` — Ensures a value exists in the database.
-- `@UniqueValue` — Ensures a value is unique in the database.
-
----
-
-## 📁 Project Structure (Key Parts)
-```
-src/main/java/prasetyo/jpa/
-├── controller/
-│   ├── auth/
-│   ├── category/
-│   └── task/
-├── entity/
-├── repository/
-├── request/
-│   ├── category/
-│   └── task/
-├── service/
-│   ├── category/
-│   └── task/
-...
+### Building for Production
+```bash
+./mvnw clean package
 ```
 
----
+## License
 
-## 👨‍💻 Author
-
-Made with ☕ & ❤️ by [@emrsyah](https://github.com/emrsyah)
-
----
-
-## 📄 License
-
-MIT License – use it, modify it, share it!
+This project is licensed under the MIT License - see the LICENSE file for details.
