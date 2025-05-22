@@ -38,18 +38,23 @@ Taskmaster is the backend service for the Taskmaster app—a productivity tool t
 ### Tasks
 - `POST /api/tasks` — Create a new task (regular or recurring)
 - `GET /api/tasks` — List all tasks (both regular and recurring)
-- `GET /api/tasks/{id}` — Get a specific task (either regular or recurring)
-- `PUT /api/tasks/{id}` — Update a task (either regular or recurring)
-- `DELETE /api/tasks/regular/{id}` — Delete a regular task
-- `DELETE /api/tasks/recurring/{id}` — Delete a recurring task
-- `PUT /api/tasks/{id}/start` — Mark a task as in progress
-- `PUT /api/tasks/{id}/complete` — Mark a task as completed
+- `GET /api/tasks/{uuid}` — Get a specific task by UUID (either regular or recurring)
+- `PUT /api/tasks/{uuid}` — Update a task by UUID (either regular or recurring)
+- `DELETE /api/tasks/regular/{uuid}` — Delete a regular task by UUID
+- `DELETE /api/tasks/recurring/{uuid}` — Delete a recurring task by UUID
+- `PUT /api/tasks/{uuid}/start` — Mark a task as in progress
+- `PUT /api/tasks/{uuid}/complete` — Mark a task as completed
 
 Task Status Lifecycle:
 - PENDING (Initial state)
 - IN_PROGRESS (Task is being worked on)
 - COMPLETED (Task is done)
 - ARCHIVED (Task is archived)
+
+Task Identification:
+- Each task (both regular and recurring) has a unique UUID
+- The UUID is used for all operations (get, update, delete, etc.)
+- This ensures no ID conflicts between regular and recurring tasks
 
 ### Categories
 - `POST /api/categories` — Create a new category
