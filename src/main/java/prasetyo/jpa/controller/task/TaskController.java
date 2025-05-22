@@ -293,4 +293,52 @@ public class TaskController {
             return responseHelper.error("Task not found", HttpStatus.NOT_FOUND);
         }
     }
+
+    @PutMapping("/{uuid}/archive")
+    @UseMiddleware(names = { "auth" })
+    public ResponseEntity<Map<String, Object>> archiveTask(@PathVariable String uuid) {
+        User user = (User) httpServletRequest.getAttribute("currentUser");
+        if (user == null) {
+            return responseHelper.error("Unauthorized", HttpStatus.UNAUTHORIZED);
+        }
+
+        try {
+            Object task = taskService.archiveTask(uuid, user);
+            return responseHelper.success("Task archived successfully", task);
+        } catch (IllegalArgumentException e) {
+            return responseHelper.error("Task not found", HttpStatus.NOT_FOUND);
+        }
+    }
+
+    @PutMapping("/{uuid}/unarchive")
+    @UseMiddleware(names = { "auth" })
+    public ResponseEntity<Map<String, Object>> unarchiveTask(@PathVariable String uuid) {
+        User user = (User) httpServletRequest.getAttribute("currentUser");
+        if (user == null) {
+            return responseHelper.error("Unauthorized", HttpStatus.UNAUTHORIZED);
+        }
+
+        try {
+            Object task = taskService.unarchiveTask(uuid, user);
+            return responseHelper.success("Task unarchived successfully", task);
+        } catch (IllegalArgumentException e) {
+            return responseHelper.error("Task not found", HttpStatus.NOT_FOUND);
+        }
+    }
+
+    @PutMapping("/{uuid}/undo-complete")
+    @UseMiddleware(names = { "auth" })
+    public ResponseEntity<Map<String, Object>> undoTaskCompletion(@PathVariable String uuid) {
+        User user = (User) httpServletRequest.getAttribute("currentUser");
+        if (user == null) {
+            return responseHelper.error("Unauthorized", HttpStatus.UNAUTHORIZED);
+        }
+
+        try {
+            Object task = taskService.undoTaskCompletion(uuid, user);
+            return responseHelper.success("Task completion undone successfully", task);
+        } catch (IllegalArgumentException e) {
+            return responseHelper.error("Task not found", HttpStatus.NOT_FOUND);
+        }
+    }
 }

@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
+import prasetyo.jpa.entity.AbstractTask;
 import prasetyo.jpa.entity.RecurringTask;
 import prasetyo.jpa.entity.RegularTask;
 import prasetyo.jpa.entity.User;
@@ -30,26 +31,34 @@ public class TaskService {
 
     @Transactional(readOnly = true, propagation = Propagation.SUPPORTS)
     public RegularTask getRegularTask(String uuid, User user) {
-        RegularTask task = regularTaskRepository.findByUuid(uuid).orElse(null);
-        if (task == null) {
+        try {
+            RegularTask task = regularTaskRepository.findByUuid(uuid).orElse(null);
+            if (task == null) {
+                return null;
+            }
+            if (task.getUser() != null && task.getUser().getId().equals(user.getId())) {
+                return task;
+            }
+            return null;
+        } catch (Exception e) {
             return null;
         }
-        if (task.getUser() != null && task.getUser().getId().equals(user.getId())) {
-            return task;
-        }
-        return null;
     }
 
     @Transactional(readOnly = true, propagation = Propagation.SUPPORTS)
     public RecurringTask getRecurringTask(String uuid, User user) {
-        RecurringTask task = recurringTaskRepository.findByUuid(uuid).orElse(null);
-        if (task == null) {
+        try {
+            RecurringTask task = recurringTaskRepository.findByUuid(uuid).orElse(null);
+            if (task == null) {
+                return null;
+            }
+            if (task.getUser() != null && task.getUser().getId().equals(user.getId())) {
+                return task;
+            }
+            return null;
+        } catch (Exception e) {
             return null;
         }
-        if (task.getUser() != null && task.getUser().getId().equals(user.getId())) {
-            return task;
-        }
-        return null;
     }
     
     @Transactional(readOnly = true, propagation = Propagation.SUPPORTS)
@@ -278,5 +287,80 @@ public class TaskService {
     @Transactional
     public RecurringTask updateRecurringTask(RecurringTask task) {
         return recurringTaskRepository.save(task);
+    }
+
+    @Transactional(propagation = Propagation.REQUIRED)
+    public Object archiveTask(String uuid, User user) {
+        try {
+            // Try regular task first
+            RegularTask regularTask = getRegularTask(uuid, user);
+            if (regularTask != null) {
+                regularTask.archive();
+                return regularTaskRepository.save(regularTask);
+            }
+
+            // Then try recurring task
+            RecurringTask recurringTask = getRecurringTask(uuid, user);
+            if (recurringTask != null) {
+                recurringTask.archive();
+                return recurringTaskRepository.save(recurringTask);
+            }
+
+            throw new IllegalArgumentException("Task not found");
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Error archiving task: " + e.getMessage());
+        }
+    }
+
+    @Transactional(propagation = Propagation.REQUIRED)
+    public Object unarchiveTask(String uuid, User user) {
+        try {
+            // Try regular task first
+            RegularTask regularTask = getRegularTask(uuid, user);
+            if (regularTask != null) {
+                regularTask.unarchive();
+                return regularTaskRepository.save(regularTask);
+            }
+
+            // Then try recurring task
+            RecurringTask recurringTask = getRecurringTask(uuid, user);
+            if (recurringTask != null) {
+                recurringTask.unarchive();
+                return recurringTaskRepository.save(recurringTask);
+            }
+
+            throw new IllegalArgumentException("Task not found");
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Error unarchiving task: " + e.getMessage());
+        }
+    }
+
+    @Transactional(propagation = Propagation.REQUIRED)
+    public Object undoTaskCompletion(String uuid, User user) {
+        try {
+            // Try regular task first
+            RegularTask regularTask = getRegularTask(uuid, user);
+            if (regularTask != null) {
+                regularTask.setCompleted(false);
+                regularTask.setStatus(AbstractTask.TaskStatus.IN_PROGRESS);
+                return regularTaskRepository.save(regularTask);
+            }
+
+            // Then try recurring task
+            RecurringTask recurringTask = getRecurringTask(uuid, user);
+            if (recurringTask != null) {
+                recurringTask.setCompleted(false);
+                recurringTask.setStatus(AbstractTask.TaskStatus.IN_PROGRESS);
+                // Remove the last done date if any
+                if (recurringTask.getDoneDates() != null && !recurringTask.getDoneDates().isEmpty()) {
+                    recurringTask.getDoneDates().remove(recurringTask.getDoneDates().size() - 1);
+                }
+                return recurringTaskRepository.save(recurringTask);
+            }
+
+            throw new IllegalArgumentException("Task not found");
+        } catch (Exception e) {
+            throw new IllegalArgumentException("Error undoing task completion: " + e.getMessage());
+        }
     }
 }
