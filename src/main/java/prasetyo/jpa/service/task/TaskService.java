@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import prasetyo.jpa.entity.RecurringTask;
 import prasetyo.jpa.entity.RegularTask;
@@ -12,12 +13,47 @@ import prasetyo.jpa.repository.RecurringTaskRepository;
 import prasetyo.jpa.repository.RegularTaskRepository;
 
 @Service
+@Transactional
 public class TaskService {
     @Autowired
     private RegularTaskRepository regularTaskRepository;
 
     @Autowired
     private RecurringTaskRepository recurringTaskRepository;
+
+    @Transactional(readOnly = true)
+    public RegularTask getRegularTask(Long id, User user) {
+        RegularTask task = regularTaskRepository.findById(id).orElse(null);
+        if (task == null) {
+            return null;
+        }
+        if (task.getUser() != null && task.getUser().getId().equals(user.getId())) {
+            return task;
+        }
+        return null;
+    }
+
+    @Transactional(readOnly = true)
+    public RecurringTask getRecurringTask(Long id, User user) {
+        RecurringTask task = recurringTaskRepository.findById(id).orElse(null);
+        if (task == null) {
+            return null;
+        }
+        if (task.getUser() != null && task.getUser().getId().equals(user.getId())) {
+            return task;
+        }
+        return null;
+    }
+    
+    @Transactional(readOnly = true)
+    public List<RegularTask> getRegularTasks(User user) {
+        return regularTaskRepository.findByUser(user);
+    }
+
+    @Transactional(readOnly = true)
+    public List<RecurringTask> getRecurringTasks(User user) {
+        return recurringTaskRepository.findByUser(user);
+    }
 
     public void deleteRegularTask(Long id, User user) {
         RegularTask task = regularTaskRepository.findById(id).orElse(null);
@@ -33,46 +69,6 @@ public class TaskService {
         }
     }
 
-    public RegularTask getRegularTask(Long id, User user) {
-        RegularTask task = regularTaskRepository.findById(id).orElse(null);
-        if (task != null && task.getUser().getId().equals(user.getId())) {
-            return task;
-        }
-        return null;
-    }
-
-    public RecurringTask getRecurringTask(Long id, User user) {
-        RecurringTask task = recurringTaskRepository.findById(id).orElse(null);
-        if (task != null && task.getUser().getId().equals(user.getId())) {
-            return task;
-        }
-        return null;
-    }
-    
-    public List<RegularTask> getRegularTasks(User user) {
-        return regularTaskRepository.findByUser(user);
-    }
-
-    public List<RecurringTask> getRecurringTasks(User user) {
-        return recurringTaskRepository.findByUser(user);
-    }
-
-    // public List<RegularTask> getRegularTasksByToken(String token) {
-    //     return regularTaskRepository.findByToken(token).orElse(null);
-    // }
-
-    // public List<RecurringTask> getRecurringTasksByToken(String token) {
-    //     return recurringTaskRepository.findByToken(token).orElse(null);
-    // }
-    
-    // public List<RegularTask> getRegularTasksByCategory(Long categoryId) {
-    //     return regularTaskRepository.findByCategoryId(categoryId);
-    // }
-
-    // public List<RecurringTask> getRecurringTasksByCategory(Long categoryId) {
-    //     return recurringTaskRepository.findByCategoryId(categoryId);
-    // }
-    
     public void archiveRegularTask(Long id) {
         RegularTask task = regularTaskRepository.findById(id).orElse(null);
         if (task != null) {
@@ -120,7 +116,6 @@ public class TaskService {
         task.setPriority(dto.getPriority());
         task.setDeadline(dto.getDeadline());
         task.setUser(user);
-        // Set other fields as needed, e.g., category, createdAt, etc.
         return regularTaskRepository.save(task);
     }
 
@@ -131,7 +126,6 @@ public class TaskService {
         task.setPriority(dto.getPriority());
         task.setRecurrenceDays(dto.getRecurrenceDays());
         task.setUser(user);
-        // Set other fields as needed, e.g., category, createdAt, etc.
         return recurringTaskRepository.save(task);
     }
 }

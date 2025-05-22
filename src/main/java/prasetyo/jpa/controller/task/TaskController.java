@@ -44,15 +44,12 @@ public class TaskController {
     @UseMiddleware(names = { "auth" })
     public ResponseEntity<?> createTask(@Valid @RequestBody CreateTaskRequest request) {
         User user = (User) httpServletRequest.getAttribute("currentUser");
-        System.out.println("User: " + user);
         if (request.getTaskType() == CreateTaskRequest.TaskType.REGULAR) {
             RegularTask createdTask = taskService.createRegularTaskFromDto(request, user);
-            System.out.println("Regular task: " + createdTask);
-            return ResponseEntity.status(HttpStatus.CREATED).body(createdTask);
+            return responseHelper.success("Regular task created successfully", createdTask);
         } else if (request.getTaskType() == CreateTaskRequest.TaskType.RECURRING) {
-            System.out.println("Recurring task: " + request);
             RecurringTask createdTask = taskService.createRecurringTaskFromDto(request, user);
-            return ResponseEntity.status(HttpStatus.CREATED).body(createdTask);
+            return responseHelper.success("Recurring task created successfully", createdTask);
         } else {
             return responseHelper.error("Invalid task type");
         }
@@ -60,68 +57,111 @@ public class TaskController {
 
     @DeleteMapping("/regular/{id}")
     @UseMiddleware(names = { "auth" })
-    public ResponseEntity<Void> deleteRegularTask(@PathVariable Long id) {
+    public ResponseEntity<Map<String, Object>> deleteRegularTask(@PathVariable Long id) {
         User user = (User) httpServletRequest.getAttribute("currentUser");
         if (user == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            return responseHelper.error("Unauthorized", HttpStatus.UNAUTHORIZED);
         }
         taskService.deleteRegularTask(id, user);
-        return ResponseEntity.noContent().build();
+        return responseHelper.success("Regular task deleted successfully");
     }
 
     @GetMapping("/regular")
     @UseMiddleware(names = { "auth" })
-    public ResponseEntity<List<RegularTask>> getAllRegularTasks() {
+    public ResponseEntity<Map<String, Object>> getAllRegularTasks() {
         User user = (User) httpServletRequest.getAttribute("currentUser");
         if (user == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            return responseHelper.error("Unauthorized", HttpStatus.UNAUTHORIZED);
         }
         List<RegularTask> tasks = taskService.getRegularTasks(user);
-        return ResponseEntity.ok(tasks);
+        return responseHelper.success("Fetched all regular tasks", tasks);
     }
 
     @DeleteMapping("/recurring/{id}")
     @UseMiddleware(names = { "auth" })
-    public ResponseEntity<Void> deleteRecurringTask(@PathVariable Long id) {
+    public ResponseEntity<Map<String, Object>> deleteRecurringTask(@PathVariable Long id) {
         User user = (User) httpServletRequest.getAttribute("currentUser");
         if (user == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            return responseHelper.error("Unauthorized", HttpStatus.UNAUTHORIZED);
         }
         taskService.deleteRecurringTask(id, user);
-        return ResponseEntity.noContent().build();
+        return responseHelper.success("Recurring task deleted successfully");
     }
 
     @GetMapping("/recurring")
     @UseMiddleware(names = { "auth" })
-    public ResponseEntity<List<RecurringTask>> getAllRecurringTasks() {
+    public ResponseEntity<Map<String, Object>> getAllRecurringTasks() {
         User user = (User) httpServletRequest.getAttribute("currentUser");
         if (user == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            return responseHelper.error("Unauthorized", HttpStatus.UNAUTHORIZED);
         }
         List<RecurringTask> tasks = taskService.getRecurringTasks(user);
-        return ResponseEntity.ok(tasks);
+        return responseHelper.success("Fetched all recurring tasks", tasks);
     }
 
     @GetMapping("/recurring/{id}")
     @UseMiddleware(names = { "auth" })
-    public ResponseEntity<RecurringTask> getRecurringTask(@PathVariable Long id) {
+    public ResponseEntity<Map<String, Object>> getRecurringTask(@PathVariable Long id) {
         User user = (User) httpServletRequest.getAttribute("currentUser");
         if (user == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            return responseHelper.error("Unauthorized", HttpStatus.UNAUTHORIZED);
         }
         RecurringTask task = taskService.getRecurringTask(id, user);
-        return ResponseEntity.ok(task);
+        return responseHelper.success("Fetched recurring task", task);
     }
 
     @GetMapping("/regular/{id}")
     @UseMiddleware(names = { "auth" })
-    public ResponseEntity<RegularTask> getRegularTask(@PathVariable Long id) {
+    public ResponseEntity<Map<String, Object>> getRegularTask(@PathVariable Long id) {
         User user = (User) httpServletRequest.getAttribute("currentUser");
         if (user == null) {
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+            return responseHelper.error("Unauthorized", HttpStatus.UNAUTHORIZED);
         }
         RegularTask task = taskService.getRegularTask(id, user);
-        return ResponseEntity.ok(task);
+        return responseHelper.success("Fetched regular task", task);
+    }
+
+    @GetMapping("/{id}")
+    @UseMiddleware(names = { "auth" })
+    public ResponseEntity<Map<String, Object>> getTask(@PathVariable Long id) {
+        User user = (User) httpServletRequest.getAttribute("currentUser");
+        if (user == null) {
+            return responseHelper.error("Unauthorized", HttpStatus.UNAUTHORIZED);
+        }
+
+        // Try to find regular task first
+        RegularTask regularTask = taskService.getRegularTask(id, user);
+        if (regularTask != null) {
+            return responseHelper.success("Fetched regular task", regularTask);
+        }
+
+        // If regular task not found, try recurring task
+        RecurringTask recurringTask = taskService.getRecurringTask(id, user);
+        if (recurringTask != null) {
+            return responseHelper.success("Fetched recurring task", recurringTask);
+        }
+
+        // If neither found, return error
+        return responseHelper.error("Task not found", HttpStatus.NOT_FOUND);
+    }
+
+    @GetMapping
+    @UseMiddleware(names = { "auth" })
+    public ResponseEntity<Map<String, Object>> getAllTasks() {
+        User user = (User) httpServletRequest.getAttribute("currentUser");
+        if (user == null) {
+            return responseHelper.error("Unauthorized", HttpStatus.UNAUTHORIZED);
+        }
+        
+        List<RegularTask> regularTasks = taskService.getRegularTasks(user);
+        List<RecurringTask> recurringTasks = taskService.getRecurringTasks(user);
+        
+        Map<String, List<?>> allTasks = Map.of(
+            "regularTasks", regularTasks,
+            "recurringTasks", recurringTasks
+        );
+        
+        return responseHelper.success("Fetched all tasks", allTasks);
     }
 
 }
