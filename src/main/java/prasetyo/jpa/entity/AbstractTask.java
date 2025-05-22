@@ -1,6 +1,7 @@
 package prasetyo.jpa.entity;
 
 import java.util.Date;
+import java.util.UUID;
 
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -15,6 +16,7 @@ import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
 import jakarta.persistence.Enumerated;
 import jakarta.persistence.EnumType;
+import jakarta.persistence.SequenceGenerator;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -30,8 +32,11 @@ public abstract class AbstractTask implements Archivable {
     }
 
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    private String uuid;
+
+    @Column(name = "sequence_number")
+    private Long sequenceNumber;
 
     private String title;
     private String description;

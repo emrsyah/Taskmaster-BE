@@ -25,9 +25,12 @@ public class TaskService {
     @Autowired
     private RecurringTaskRepository recurringTaskRepository;
 
+    @Autowired
+    private TaskSequenceService taskSequenceService;
+
     @Transactional(readOnly = true, propagation = Propagation.SUPPORTS)
-    public RegularTask getRegularTask(Long id, User user) {
-        RegularTask task = regularTaskRepository.findById(id).orElse(null);
+    public RegularTask getRegularTask(String uuid, User user) {
+        RegularTask task = regularTaskRepository.findByUuid(uuid).orElse(null);
         if (task == null) {
             return null;
         }
@@ -38,8 +41,8 @@ public class TaskService {
     }
 
     @Transactional(readOnly = true, propagation = Propagation.SUPPORTS)
-    public RecurringTask getRecurringTask(Long id, User user) {
-        RecurringTask task = recurringTaskRepository.findById(id).orElse(null);
+    public RecurringTask getRecurringTask(String uuid, User user) {
+        RecurringTask task = recurringTaskRepository.findByUuid(uuid).orElse(null);
         if (task == null) {
             return null;
         }
@@ -60,24 +63,24 @@ public class TaskService {
     }
 
     @Transactional
-    public void deleteRegularTask(Long id, User user) {
-        RegularTask task = regularTaskRepository.findById(id).orElse(null);
+    public void deleteRegularTask(String uuid, User user) {
+        RegularTask task = regularTaskRepository.findByUuid(uuid).orElse(null);
         if (task != null && task.getUser().getId().equals(user.getId())) {
-            regularTaskRepository.deleteById(id);
+            regularTaskRepository.delete(task);
         }
     }
 
     @Transactional
-    public void deleteRecurringTask(Long id, User user) {
-        RecurringTask task = recurringTaskRepository.findById(id).orElse(null);
+    public void deleteRecurringTask(String uuid, User user) {
+        RecurringTask task = recurringTaskRepository.findByUuid(uuid).orElse(null);
         if (task != null && task.getUser().getId().equals(user.getId())) {
-            recurringTaskRepository.deleteById(id);
+            recurringTaskRepository.delete(task);
         }
     }
 
     @Transactional
-    public void archiveRegularTask(Long id) {
-        RegularTask task = regularTaskRepository.findById(id).orElse(null);
+    public void archiveRegularTask(String uuid) {
+        RegularTask task = regularTaskRepository.findByUuid(uuid).orElse(null);
         if (task != null) {
             task.archive();
             regularTaskRepository.save(task);
@@ -85,8 +88,8 @@ public class TaskService {
     }
 
     @Transactional
-    public void archiveRecurringTask(Long id) {
-        RecurringTask task = recurringTaskRepository.findById(id).orElse(null);
+    public void archiveRecurringTask(String uuid) {
+        RecurringTask task = recurringTaskRepository.findByUuid(uuid).orElse(null);
         if (task != null) {
             task.archive();
             recurringTaskRepository.save(task);
@@ -94,8 +97,8 @@ public class TaskService {
     }
 
     @Transactional
-    public void unarchiveRegularTask(Long id) {
-        RegularTask task = regularTaskRepository.findById(id).orElse(null);
+    public void unarchiveRegularTask(String uuid) {
+        RegularTask task = regularTaskRepository.findByUuid(uuid).orElse(null);
         if (task != null) {
             task.unarchive();
             regularTaskRepository.save(task);
@@ -103,8 +106,8 @@ public class TaskService {
     }
 
     @Transactional
-    public void unarchiveRecurringTask(Long id) {
-        RecurringTask task = recurringTaskRepository.findById(id).orElse(null);
+    public void unarchiveRecurringTask(String uuid) {
+        RecurringTask task = recurringTaskRepository.findByUuid(uuid).orElse(null);
         if (task != null) {
             task.unarchive();
             recurringTaskRepository.save(task);
@@ -112,9 +115,9 @@ public class TaskService {
     }
 
     @Transactional
-    public Object updateTask(Long id, UpdateTaskRequest request, User user) {
+    public Object updateTask(String uuid, UpdateTaskRequest request, User user) {
         // First check if it's a regular task
-        RegularTask regularTask = getRegularTask(id, user);
+        RegularTask regularTask = getRegularTask(uuid, user);
         if (regularTask != null) {
             // If it's a regular task but request is for recurring, return null
             if (request.getTaskType() != CreateTaskRequest.TaskType.REGULAR) {
@@ -132,7 +135,7 @@ public class TaskService {
         }
 
         // Then check if it's a recurring task
-        RecurringTask recurringTask = getRecurringTask(id, user);
+        RecurringTask recurringTask = getRecurringTask(uuid, user);
         if (recurringTask != null) {
             // If it's a recurring task but request is for regular, return null
             if (request.getTaskType() != CreateTaskRequest.TaskType.RECURRING) {
@@ -154,7 +157,7 @@ public class TaskService {
     }
 
     @Transactional
-    public RegularTask createRegularTaskFromDto(prasetyo.jpa.request.task.CreateTaskRequest dto, User user) {
+    public RegularTask createRegularTaskFromDto(CreateTaskRequest dto, User user) {
         if (!dto.isValid()) {
             throw new IllegalArgumentException("Invalid task data");
         }
@@ -167,11 +170,12 @@ public class TaskService {
         task.setUser(user);
         task.setCompleted(false);  // Default value
         task.setArchived(false);   // Default value
+        task.setSequenceNumber(taskSequenceService.getNextSequenceNumber());
         return regularTaskRepository.save(task);
     }
 
     @Transactional
-    public RecurringTask createRecurringTaskFromDto(prasetyo.jpa.request.task.CreateTaskRequest dto, User user) {
+    public RecurringTask createRecurringTaskFromDto(CreateTaskRequest dto, User user) {
         if (!dto.isValid()) {
             throw new IllegalArgumentException("Invalid task data");
         }
@@ -189,20 +193,21 @@ public class TaskService {
         task.setUser(user);
         task.setCompleted(false);  // Default value
         task.setArchived(false);   // Default value
+        task.setSequenceNumber(taskSequenceService.getNextSequenceNumber());
         return recurringTaskRepository.save(task);
     }
 
     @Transactional
-    public Object toggleTaskDone(Long id, User user, boolean isDone) {
+    public Object toggleTaskDone(String uuid, User user, boolean isDone) {
         // First check if it's a regular task
-        RegularTask regularTask = getRegularTask(id, user);
+        RegularTask regularTask = getRegularTask(uuid, user);
         if (regularTask != null) {
             regularTask.setCompleted(isDone);
             return regularTaskRepository.save(regularTask);
         }
 
         // Then check if it's a recurring task
-        RecurringTask recurringTask = getRecurringTask(id, user);
+        RecurringTask recurringTask = getRecurringTask(uuid, user);
         if (recurringTask != null) {
             recurringTask.setCompleted(isDone);
             if (isDone) {
@@ -218,9 +223,9 @@ public class TaskService {
     }
 
     @Transactional
-    public Object toggleTaskArchive(Long id, User user, boolean isArchived) {
+    public Object toggleTaskArchive(String uuid, User user, boolean isArchived) {
         // First check if it's a regular task
-        RegularTask regularTask = getRegularTask(id, user);
+        RegularTask regularTask = getRegularTask(uuid, user);
         if (regularTask != null) {
             if (isArchived) {
                 regularTask.archive();
@@ -231,7 +236,7 @@ public class TaskService {
         }
 
         // Then check if it's a recurring task
-        RecurringTask recurringTask = getRecurringTask(id, user);
+        RecurringTask recurringTask = getRecurringTask(uuid, user);
         if (recurringTask != null) {
             if (isArchived) {
                 recurringTask.archive();

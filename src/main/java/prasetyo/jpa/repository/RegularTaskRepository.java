@@ -10,6 +10,7 @@ import prasetyo.jpa.entity.RegularTask;
 import prasetyo.jpa.entity.User;
 
 @Repository
-public interface RegularTaskRepository extends JpaRepository<RegularTask, Long> {
+public interface RegularTaskRepository extends JpaRepository<RegularTask, String> {
     List<RegularTask> findByUser(User user);
+    Optional<RegularTask> findByUuid(String uuid);
 }

@@ -35,8 +35,7 @@ public class CreateTaskRequest {
     private Date deadline;  // Can be null for regular tasks
 
     // Fields specific to RecurringTask
-    @NotNull(message = "Recurrence days are required for recurring tasks")
-    private List<String> recurrenceDays;
+    private List<String> recurrenceDays;  // Only required for recurring tasks
 
     public enum TaskType {
         REGULAR,

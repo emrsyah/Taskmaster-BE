@@ -26,8 +26,11 @@ public class ResponseHelper {
         return ResponseEntity.status(statusCode).body(body);
     }
 
-    // 2. message + data (status=true, statusCode=200)
+    // 2. message + data (status=true, statusCode=201 for create, 200 for others)
     public <T> ResponseEntity<Map<String, Object>> success(String message, T data) {
+        if (message.toLowerCase().contains("created")) {
+            return success(message, data, true, HttpStatus.CREATED.value());
+        }
         return success(message, data, true, HttpStatus.OK.value());
     }
 
