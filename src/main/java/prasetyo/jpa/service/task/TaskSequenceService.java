@@ -2,6 +2,7 @@ package prasetyo.jpa.service.task;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.Query;
@@ -15,22 +16,33 @@ public class TaskSequenceService {
     private EntityManager entityManager;
     
     private static final String CREATE_SEQUENCE_SQL = 
-        "CREATE SEQUENCE IF NOT EXISTS task_sequence START WITH 1 INCREMENT BY 1";
+        "DO $$ BEGIN CREATE SEQUENCE IF NOT EXISTS task_sequence START WITH 1 INCREMENT BY 1; END $$;";
     
     private static final String GET_NEXT_VALUE_SQL = 
         "SELECT nextval('task_sequence')";
     
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRED)
     public void initializeSequence() {
         log.info("Initializing task sequence");
-        Query query = entityManager.createNativeQuery(CREATE_SEQUENCE_SQL);
-        query.executeUpdate();
+        try {
+            // Using DO block to handle the IF NOT EXISTS condition in PL/pgSQL
+            entityManager.createNativeQuery(CREATE_SEQUENCE_SQL)
+                .executeUpdate();
+        } catch (Exception e) {
+            log.warn("Could not create sequence (it may already exist): {}", e.getMessage());
+        }
     }
     
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRED)
     public Long getNextSequenceNumber() {
-        Query query = entityManager.createNativeQuery(GET_NEXT_VALUE_SQL);
-        Number result = (Number) query.getSingleResult();
-        return result.longValue();
+        try {
+            // Using a simple query without prepared statement
+            Query query = entityManager.createNativeQuery("SELECT nextval('task_sequence')");
+            Number result = (Number) query.getSingleResult();
+            return result.longValue();
+        } catch (Exception e) {
+            log.error("Error getting next sequence value: {}", e.getMessage());
+            throw e;
+        }
     }
 } 

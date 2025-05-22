@@ -114,7 +114,7 @@ public class TaskService {
         }
     }
 
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRED)
     public Object updateTask(String uuid, UpdateTaskRequest request, User user) {
         // First check if it's a regular task
         RegularTask regularTask = getRegularTask(uuid, user);
