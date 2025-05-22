@@ -63,6 +63,26 @@ public class TaskService {
     }
 
     @Transactional
+    public void deleteTask(String uuid, User user) {
+        // Try regular task first
+        RegularTask regularTask = getRegularTask(uuid, user);
+        if (regularTask != null) {
+            regularTaskRepository.delete(regularTask);
+            return;
+        }
+
+        // Then try recurring task
+        RecurringTask recurringTask = getRecurringTask(uuid, user);
+        if (recurringTask != null) {
+            recurringTaskRepository.delete(recurringTask);
+            return;
+        }
+
+        throw new IllegalArgumentException("Task not found");
+    }
+
+    @Transactional
+    @Deprecated(since = "1.0", forRemoval = true)
     public void deleteRegularTask(String uuid, User user) {
         RegularTask task = regularTaskRepository.findByUuid(uuid).orElse(null);
         if (task != null && task.getUser().getId().equals(user.getId())) {
@@ -71,6 +91,7 @@ public class TaskService {
     }
 
     @Transactional
+    @Deprecated(since = "1.0", forRemoval = true)
     public void deleteRecurringTask(String uuid, User user) {
         RecurringTask task = recurringTaskRepository.findByUuid(uuid).orElse(null);
         if (task != null && task.getUser().getId().equals(user.getId())) {

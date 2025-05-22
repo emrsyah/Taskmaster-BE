@@ -88,6 +88,7 @@ public class TaskController {
 
     @DeleteMapping("/regular/{uuid}")
     @UseMiddleware(names = { "auth" })
+    @Deprecated(since = "1.0", forRemoval = true)
     public ResponseEntity<Map<String, Object>> deleteRegularTask(@PathVariable String uuid) {
         User user = (User) httpServletRequest.getAttribute("currentUser");
         if (user == null) {
@@ -110,6 +111,7 @@ public class TaskController {
 
     @DeleteMapping("/recurring/{uuid}")
     @UseMiddleware(names = { "auth" })
+    @Deprecated(since = "1.0", forRemoval = true)
     public ResponseEntity<Map<String, Object>> deleteRecurringTask(@PathVariable String uuid) {
         User user = (User) httpServletRequest.getAttribute("currentUser");
         if (user == null) {
@@ -274,5 +276,21 @@ public class TaskController {
         }
 
         return responseHelper.error("Task not found", HttpStatus.NOT_FOUND);
+    }
+
+    @DeleteMapping("/{uuid}")
+    @UseMiddleware(names = { "auth" })
+    public ResponseEntity<Map<String, Object>> deleteTask(@PathVariable String uuid) {
+        User user = (User) httpServletRequest.getAttribute("currentUser");
+        if (user == null) {
+            return responseHelper.error("Unauthorized", HttpStatus.UNAUTHORIZED);
+        }
+
+        try {
+            taskService.deleteTask(uuid, user);
+            return responseHelper.success("Task deleted successfully");
+        } catch (IllegalArgumentException e) {
+            return responseHelper.error("Task not found", HttpStatus.NOT_FOUND);
+        }
     }
 }
