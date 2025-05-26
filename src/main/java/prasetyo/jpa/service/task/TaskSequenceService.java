@@ -16,7 +16,7 @@ public class TaskSequenceService {
     private EntityManager entityManager;
     
     private static final String CREATE_SEQUENCE_SQL = 
-        "DO $$ BEGIN CREATE SEQUENCE IF NOT EXISTS task_sequence START WITH 1 INCREMENT BY 1; END $$;";
+        "CREATE SEQUENCE IF NOT EXISTS task_sequence START WITH 1 INCREMENT BY 1";
     
     private static final String GET_NEXT_VALUE_SQL = 
         "SELECT nextval('task_sequence')";
@@ -25,7 +25,7 @@ public class TaskSequenceService {
     public void initializeSequence() {
         log.info("Initializing task sequence");
         try {
-            // Using DO block to handle the IF NOT EXISTS condition in PL/pgSQL
+            // Execute the create sequence query directly without using DO block
             entityManager.createNativeQuery(CREATE_SEQUENCE_SQL)
                 .executeUpdate();
         } catch (Exception e) {
