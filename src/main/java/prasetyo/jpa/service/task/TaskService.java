@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import prasetyo.jpa.entity.AbstractTask;
+import prasetyo.jpa.entity.Category;
 import prasetyo.jpa.entity.RecurringTask;
 import prasetyo.jpa.entity.RegularTask;
 import prasetyo.jpa.entity.User;
@@ -17,6 +18,7 @@ import prasetyo.jpa.repository.RecurringTaskRepository;
 import prasetyo.jpa.repository.RegularTaskRepository;
 import prasetyo.jpa.request.task.CreateTaskRequest;
 import prasetyo.jpa.request.task.UpdateTaskRequest;
+import prasetyo.jpa.service.category.CategoryService;
 
 @Service
 public class TaskService {
@@ -28,6 +30,9 @@ public class TaskService {
 
     @Autowired
     private TaskSequenceService taskSequenceService;
+
+    @Autowired
+    private CategoryService categoryService;
 
     @Transactional(readOnly = true, propagation = Propagation.SUPPORTS)
     public RegularTask getRegularTask(String uuid, User user) {
@@ -160,7 +165,11 @@ public class TaskService {
             regularTask.setDeadline(request.getDeadline());
             regularTask.setArchived(request.isArchived());
             regularTask.setCompleted(request.isCompleted());
-            
+            // Set category if provided
+            if (request.getCategoryId() != null) {
+                Category category = categoryService.getCategoryById(request.getCategoryId(), user);
+                regularTask.setCategory(category);
+            }
             return regularTaskRepository.save(regularTask);
         }
 
@@ -179,7 +188,11 @@ public class TaskService {
             recurringTask.setDoneDates(request.getDoneDates());
             recurringTask.setArchived(request.isArchived());
             recurringTask.setCompleted(request.isCompleted());
-            
+            // Set category if provided
+            if (request.getCategoryId() != null) {
+                Category category = categoryService.getCategoryById(request.getCategoryId(), user);
+                recurringTask.setCategory(category);
+            }
             return recurringTaskRepository.save(recurringTask);
         }
 
@@ -201,6 +214,13 @@ public class TaskService {
         task.setCompleted(false);  // Default value
         task.setArchived(false);   // Default value
         task.setSequenceNumber(taskSequenceService.getNextSequenceNumber());
+        
+        // Add category if categoryId is provided
+        if (dto.getCategoryId() != null) {
+            Category category = categoryService.getCategoryById(dto.getCategoryId(), user);
+            task.setCategory(category);
+        }
+
         return regularTaskRepository.save(task);
     }
 
@@ -224,6 +244,13 @@ public class TaskService {
         task.setCompleted(false);  // Default value
         task.setArchived(false);   // Default value
         task.setSequenceNumber(taskSequenceService.getNextSequenceNumber());
+        
+        // Add category if categoryId is provided
+        if (dto.getCategoryId() != null) {
+            Category category = categoryService.getCategoryById(dto.getCategoryId(), user);
+            task.setCategory(category);
+        }
+
         return recurringTaskRepository.save(task);
     }
 

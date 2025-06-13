@@ -2,6 +2,7 @@ package prasetyo.jpa.controller.task;
 
 import java.util.List;
 import java.util.Map;
+import java.util.HashMap;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -58,26 +59,23 @@ public class TaskController {
                 }
             }
 
+            Map<String, Object> response = new HashMap<>();
             if (request.getTaskType() == CreateTaskRequest.TaskType.REGULAR) {
                 RegularTask createdTask = taskService.createRegularTaskFromDto(request, user);
-                return ResponseEntity.status(HttpStatus.CREATED)
-                    .body(Map.of(
-                        "status", true,
-                        "statusCode", HttpStatus.CREATED.value(),
-                        "message", "Regular task created successfully",
-                        "data", createdTask,
-                        "errors", null
-                    ));
+                response.put("status", true);
+                response.put("statusCode", HttpStatus.CREATED.value());
+                response.put("message", "Regular task created successfully");
+                response.put("data", createdTask);
+                response.put("errors", null);
+                return ResponseEntity.status(HttpStatus.CREATED).body(response);
             } else if (request.getTaskType() == CreateTaskRequest.TaskType.RECURRING) {
                 RecurringTask createdTask = taskService.createRecurringTaskFromDto(request, user);
-                return ResponseEntity.status(HttpStatus.CREATED)
-                    .body(Map.of(
-                        "status", true,
-                        "statusCode", HttpStatus.CREATED.value(),
-                        "message", "Recurring task created successfully",
-                        "data", createdTask,
-                        "errors", null
-                    ));
+                response.put("status", true);
+                response.put("statusCode", HttpStatus.CREATED.value());
+                response.put("message", "Recurring task created successfully");
+                response.put("data", createdTask);
+                response.put("errors", null);
+                return ResponseEntity.status(HttpStatus.CREATED).body(response);
             } else {
                 return responseHelper.error("Invalid task type", HttpStatus.BAD_REQUEST);
             }

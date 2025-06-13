@@ -1,6 +1,7 @@
 package prasetyo.jpa.controller.auth;
 
 import java.util.Map;
+import java.util.HashMap;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import jakarta.validation.Validator;
 import lombok.extern.slf4j.Slf4j;
@@ -46,6 +48,9 @@ public class AuthController {
   @Autowired
   private BCryptPasswordEncoder bcrCryptPasswordEncoder;
 
+  @Autowired
+  private HttpServletRequest httpServletRequest;
+
   @PostMapping(path = "/register")
   public ResponseEntity<Map<String, Object>> register(@Valid @RequestBody RegisterRequest request) throws Exception {
     log.info("Attempting registration for email: {}", request.getEmail());
@@ -76,11 +81,28 @@ public class AuthController {
     return responseHelper.success("Login berhasil", token);
   }
 
+  @GetMapping("/me")
+  @UseMiddleware(names = { "auth" })
+  public ResponseEntity<Map<String, Object>> getCurrentUser() {
+    User user = (User) httpServletRequest.getAttribute("currentUser");
+    if (user == null) {
+      return responseHelper.error("Unauthorized", HttpStatus.UNAUTHORIZED);
+    }
+
+    Map<String, Object> userData = new HashMap<>();
+    userData.put("id", user.getId());
+    userData.put("username", user.getUsername());
+    userData.put("email", user.getEmail());
+    userData.put("taskCount", user.getTaskList() != null ? user.getTaskList().size() : 0);
+    userData.put("categoryCount", user.getCategoryList() != null ? user.getCategoryList().size() : 0);
+
+    return responseHelper.success("User data retrieved successfully", userData);
+  }
+
   @GetMapping("/test")
   @UseMiddleware(names = { "auth", "roles:user" })
   public ResponseEntity<Map<String, Object>> test() {
     log.info("in controlelr");
     return responseHelper.success("success try feature");
   }
-
 }
