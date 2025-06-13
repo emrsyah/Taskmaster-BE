@@ -10,6 +10,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import prasetyo.jpa.entity.Category;
 import prasetyo.jpa.entity.User;
+import prasetyo.jpa.helper.TransactionHelper;
 import prasetyo.jpa.repository.CategoryRepository;
 import prasetyo.jpa.repository.RegularTaskRepository;
 import prasetyo.jpa.repository.RecurringTaskRepository;
@@ -25,30 +26,39 @@ public class CategoryService {
     @Autowired
     private RecurringTaskRepository recurringTaskRepository;
 
+    @Autowired
+    private TransactionHelper transactionHelper;
+
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public Category createCategory(Category category, User user) {
-        category.setUser(user);
-        return categoryRepository.save(category);
+        return transactionHelper.executeWithRollback(() -> {
+            category.setUser(user);
+            return categoryRepository.save(category);
+        }, "createCategory");
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public Category updateCategory(Long id, Category updatedCategory, User user) {
-        Category existingCategory = categoryRepository.findByIdAndUser(id, user)
-            .orElseThrow(() -> new IllegalArgumentException("Category not found or unauthorized"));
-        
-        existingCategory.setName(updatedCategory.getName());
-        existingCategory.setDescription(updatedCategory.getDescription());
-        existingCategory.setColor(updatedCategory.getColor());
-        existingCategory.setArchived(updatedCategory.isArchived());
-        
-        return categoryRepository.save(existingCategory);
+        return transactionHelper.executeWithRollback(() -> {
+            Category existingCategory = categoryRepository.findByIdAndUser(id, user)
+                .orElseThrow(() -> new IllegalArgumentException("Category not found or unauthorized"));
+            
+            existingCategory.setName(updatedCategory.getName());
+            existingCategory.setDescription(updatedCategory.getDescription());
+            existingCategory.setColor(updatedCategory.getColor());
+            existingCategory.setArchived(updatedCategory.isArchived());
+            
+            return categoryRepository.save(existingCategory);
+        }, "updateCategory");
     }
 
     @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void deleteCategory(Long id, User user) {
-        Category category = categoryRepository.findByIdAndUser(id, user)
-            .orElseThrow(() -> new IllegalArgumentException("Category not found or unauthorized"));
-        categoryRepository.delete(category);
+        transactionHelper.executeVoidWithRollback(() -> {
+            Category category = categoryRepository.findByIdAndUser(id, user)
+                .orElseThrow(() -> new IllegalArgumentException("Category not found or unauthorized"));
+            categoryRepository.delete(category);
+        }, "deleteCategory");
     }
 
     @Transactional(readOnly = true, propagation = Propagation.REQUIRES_NEW)

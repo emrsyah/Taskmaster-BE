@@ -14,6 +14,7 @@ import prasetyo.jpa.entity.Category;
 import prasetyo.jpa.entity.RecurringTask;
 import prasetyo.jpa.entity.RegularTask;
 import prasetyo.jpa.entity.User;
+import prasetyo.jpa.helper.TransactionHelper;
 import prasetyo.jpa.repository.RecurringTaskRepository;
 import prasetyo.jpa.repository.RegularTaskRepository;
 import prasetyo.jpa.request.task.CreateTaskRequest;
@@ -33,6 +34,9 @@ public class TaskService {
 
     @Autowired
     private CategoryService categoryService;
+
+    @Autowired
+    private TransactionHelper transactionHelper;
 
     @Transactional(readOnly = true, propagation = Propagation.SUPPORTS)
     public RegularTask getRegularTask(String uuid, User user) {
@@ -78,21 +82,23 @@ public class TaskService {
 
     @Transactional
     public void deleteTask(String uuid, User user) {
-        // Try regular task first
-        RegularTask regularTask = getRegularTask(uuid, user);
-        if (regularTask != null) {
-            regularTaskRepository.delete(regularTask);
-            return;
-        }
+        transactionHelper.executeVoidWithRollback(() -> {
+            // Try regular task first
+            RegularTask regularTask = getRegularTask(uuid, user);
+            if (regularTask != null) {
+                regularTaskRepository.delete(regularTask);
+                return;
+            }
 
-        // Then try recurring task
-        RecurringTask recurringTask = getRecurringTask(uuid, user);
-        if (recurringTask != null) {
-            recurringTaskRepository.delete(recurringTask);
-            return;
-        }
+            // Then try recurring task
+            RecurringTask recurringTask = getRecurringTask(uuid, user);
+            if (recurringTask != null) {
+                recurringTaskRepository.delete(recurringTask);
+                return;
+            }
 
-        throw new IllegalArgumentException("Task not found");
+            throw new IllegalArgumentException("Task not found");
+        }, "deleteTask");
     }
 
     @Transactional
@@ -151,52 +157,54 @@ public class TaskService {
 
     @Transactional(propagation = Propagation.REQUIRED)
     public Object updateTask(String uuid, UpdateTaskRequest request, User user) {
-        // First check if it's a regular task
-        RegularTask regularTask = getRegularTask(uuid, user);
-        if (regularTask != null) {
-            // If it's a regular task but request is for recurring, return null
-            if (request.getTaskType() != CreateTaskRequest.TaskType.REGULAR) {
-                throw new IllegalArgumentException("Cannot change task type from regular to recurring");
+        return transactionHelper.executeWithRollback(() -> {
+            // First check if it's a regular task
+            RegularTask regularTask = getRegularTask(uuid, user);
+            if (regularTask != null) {
+                // If it's a regular task but request is for recurring, return null
+                if (request.getTaskType() != CreateTaskRequest.TaskType.REGULAR) {
+                    throw new IllegalArgumentException("Cannot change task type from regular to recurring");
+                }
+                
+                regularTask.setTitle(request.getTitle());
+                regularTask.setDescription(request.getDescription());
+                regularTask.setPriority(request.getPriority());
+                regularTask.setDeadline(request.getDeadline());
+                regularTask.setArchived(request.isArchived());
+                regularTask.setCompleted(request.isCompleted());
+                // Set category if provided
+                if (request.getCategoryId() != null) {
+                    Category category = categoryService.getCategoryById(request.getCategoryId(), user);
+                    regularTask.setCategory(category);
+                }
+                return regularTaskRepository.save(regularTask);
             }
-            
-            regularTask.setTitle(request.getTitle());
-            regularTask.setDescription(request.getDescription());
-            regularTask.setPriority(request.getPriority());
-            regularTask.setDeadline(request.getDeadline());
-            regularTask.setArchived(request.isArchived());
-            regularTask.setCompleted(request.isCompleted());
-            // Set category if provided
-            if (request.getCategoryId() != null) {
-                Category category = categoryService.getCategoryById(request.getCategoryId(), user);
-                regularTask.setCategory(category);
-            }
-            return regularTaskRepository.save(regularTask);
-        }
 
-        // Then check if it's a recurring task
-        RecurringTask recurringTask = getRecurringTask(uuid, user);
-        if (recurringTask != null) {
-            // If it's a recurring task but request is for regular, return null
-            if (request.getTaskType() != CreateTaskRequest.TaskType.RECURRING) {
-                throw new IllegalArgumentException("Cannot change task type from recurring to regular");
+            // Then check if it's a recurring task
+            RecurringTask recurringTask = getRecurringTask(uuid, user);
+            if (recurringTask != null) {
+                // If it's a recurring task but request is for regular, return null
+                if (request.getTaskType() != CreateTaskRequest.TaskType.RECURRING) {
+                    throw new IllegalArgumentException("Cannot change task type from recurring to regular");
+                }
+                
+                recurringTask.setTitle(request.getTitle());
+                recurringTask.setDescription(request.getDescription());
+                recurringTask.setPriority(request.getPriority());
+                recurringTask.setRecurrenceDays(request.getRecurrenceDays());
+                recurringTask.setDoneDates(request.getDoneDates());
+                recurringTask.setArchived(request.isArchived());
+                recurringTask.setCompleted(request.isCompleted());
+                // Set category if provided
+                if (request.getCategoryId() != null) {
+                    Category category = categoryService.getCategoryById(request.getCategoryId(), user);
+                    recurringTask.setCategory(category);
+                }
+                return recurringTaskRepository.save(recurringTask);
             }
-            
-            recurringTask.setTitle(request.getTitle());
-            recurringTask.setDescription(request.getDescription());
-            recurringTask.setPriority(request.getPriority());
-            recurringTask.setRecurrenceDays(request.getRecurrenceDays());
-            recurringTask.setDoneDates(request.getDoneDates());
-            recurringTask.setArchived(request.isArchived());
-            recurringTask.setCompleted(request.isCompleted());
-            // Set category if provided
-            if (request.getCategoryId() != null) {
-                Category category = categoryService.getCategoryById(request.getCategoryId(), user);
-                recurringTask.setCategory(category);
-            }
-            return recurringTaskRepository.save(recurringTask);
-        }
 
-        return null;
+            return null;
+        }, "updateTask");
     }
 
     @Transactional
