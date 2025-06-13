@@ -44,4 +44,10 @@ public class RecurringTask extends AbstractTask {
     public boolean isArchived() {
         return isArchived;
     }
+
+    @Override
+    public void markCompleted() {
+        super.markCompleted();
+        this.doneDates.add(new Date());
+    }
 }
