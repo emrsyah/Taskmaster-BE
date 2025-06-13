@@ -4,6 +4,8 @@ import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import prasetyo.jpa.entity.Category;
@@ -23,13 +25,13 @@ public class CategoryService {
     @Autowired
     private RecurringTaskRepository recurringTaskRepository;
 
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public Category createCategory(Category category, User user) {
         category.setUser(user);
         return categoryRepository.save(category);
     }
 
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public Category updateCategory(Long id, Category updatedCategory, User user) {
         Category existingCategory = categoryRepository.findByIdAndUser(id, user)
             .orElseThrow(() -> new IllegalArgumentException("Category not found or unauthorized"));
@@ -42,37 +44,37 @@ public class CategoryService {
         return categoryRepository.save(existingCategory);
     }
 
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public void deleteCategory(Long id, User user) {
         Category category = categoryRepository.findByIdAndUser(id, user)
             .orElseThrow(() -> new IllegalArgumentException("Category not found or unauthorized"));
         categoryRepository.delete(category);
     }
 
-    @Transactional(readOnly = true)
+    @Transactional(readOnly = true, propagation = Propagation.REQUIRES_NEW)
     public List<Category> getAllCategories(User user) {
         return categoryRepository.findByUser(user);
     }
 
-    @Transactional(readOnly = true)
+    @Transactional(readOnly = true, propagation = Propagation.REQUIRES_NEW)
     public List<Category> getActiveCategories(User user) {
         return categoryRepository.findByUserAndIsArchivedFalse(user);
     }
 
-    @Transactional(readOnly = true)
+    @Transactional(readOnly = true, propagation = Propagation.REQUIRES_NEW)
     public Category getCategoryById(Long id, User user) {
         return categoryRepository.findByIdAndUser(id, user)
             .orElseThrow(() -> new IllegalArgumentException("Category not found or unauthorized"));
     }
 
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public Category archiveCategory(Long id, User user) {
         Category category = getCategoryById(id, user);
         category.archive();
         return categoryRepository.save(category);
     }
 
-    @Transactional
+    @Transactional(propagation = Propagation.REQUIRES_NEW)
     public Category unarchiveCategory(Long id, User user) {
         Category category = getCategoryById(id, user);
         category.unarchive();
