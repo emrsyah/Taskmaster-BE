@@ -13,4 +13,5 @@ import prasetyo.jpa.entity.User;
 public interface RegularTaskRepository extends JpaRepository<RegularTask, String> {
     List<RegularTask> findByUser(User user);
     Optional<RegularTask> findByUuid(String uuid);
+    long countByUser(User user);
 }

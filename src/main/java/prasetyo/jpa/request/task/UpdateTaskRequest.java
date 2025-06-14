@@ -8,7 +8,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import java.util.Date;
-import java.util.List;
+import java.util.Set;
 
 @Data
 @AllArgsConstructor
@@ -34,6 +34,6 @@ public class UpdateTaskRequest {
     private Date deadline;
 
     // Fields specific to RecurringTask
-    private List<String> recurrenceDays;
-    private List<Date> doneDates;
+    private Set<String> recurrenceDays;
+    private Set<Date> doneDates;
 } 

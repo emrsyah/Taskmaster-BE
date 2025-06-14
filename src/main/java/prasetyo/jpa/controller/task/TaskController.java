@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.transaction.annotation.Transactional;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
@@ -184,21 +185,24 @@ public class TaskController {
 
     @GetMapping
     @UseMiddleware(names = { "auth" })
-    public ResponseEntity<Map<String, Object>> getAllTasks() {
-        User user = (User) httpServletRequest.getAttribute("currentUser");
-        if (user == null) {
-            return responseHelper.error("Unauthorized", HttpStatus.UNAUTHORIZED);
+    public ResponseEntity<?> getAllTasks() {
+        try {
+            User user = (User) httpServletRequest.getAttribute("currentUser");
+            if (user == null) {
+                return responseHelper.error("Unauthorized", HttpStatus.UNAUTHORIZED);
+            }
+
+            List<RegularTask> regularTasks = taskService.getRegularTasks(user);
+            List<RecurringTask> recurringTasks = taskService.getRecurringTasks(user);
+
+            Map<String, Object> response = new HashMap<>();
+            response.put("regularTasks", regularTasks);
+            response.put("recurringTasks", recurringTasks);
+
+            return responseHelper.success("Tasks retrieved successfully", response);
+        } catch (Exception e) {
+            return responseHelper.error("Error fetching tasks: " + e.getMessage());
         }
-        
-        List<RegularTask> regularTasks = taskService.getRegularTasks(user);
-        List<RecurringTask> recurringTasks = taskService.getRecurringTasks(user);
-        
-        Map<String, List<?>> allTasks = Map.of(
-            "regularTasks", regularTasks,
-            "recurringTasks", recurringTasks
-        );
-        
-        return responseHelper.success("Fetched all tasks", allTasks);
     }
 
     @PutMapping("/{uuid}")
@@ -269,6 +273,7 @@ public class TaskController {
         RecurringTask recurringTask = taskService.getRecurringTask(uuid, user);
         if (recurringTask != null) {
             recurringTask.markCompleted();
+            
             taskService.updateRecurringTask(recurringTask);
             return responseHelper.success("Recurring task completed", recurringTask);
         }

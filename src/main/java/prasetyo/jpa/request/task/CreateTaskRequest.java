@@ -8,7 +8,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import java.util.Date;
-import java.util.List;
+import java.util.Set;
 
 @Data
 @AllArgsConstructor
@@ -35,7 +35,7 @@ public class CreateTaskRequest {
     private Date deadline;  // Can be null for regular tasks
 
     // Fields specific to RecurringTask
-    private List<String> recurrenceDays;  // Only required for recurring tasks
+    private Set<String> recurrenceDays;  // Only required for recurring tasks
 
     public enum TaskType {
         REGULAR,

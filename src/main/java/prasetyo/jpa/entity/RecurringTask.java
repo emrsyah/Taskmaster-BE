@@ -1,14 +1,18 @@
 package prasetyo.jpa.entity;
 
 import java.util.Date;
-import java.util.List;
+import java.util.HashSet;
+import java.util.Set;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.Entity;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.ElementCollection;
+import jakarta.persistence.FetchType;
+import jakarta.persistence.CollectionTable;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -16,15 +20,20 @@ import lombok.Setter;
 @Table(name = "recurring_tasks")
 @Getter
 @Setter
+@JsonIgnoreProperties({"hibernateLazyInitializer", "handler"})
 public class RecurringTask extends AbstractTask {
-    @ElementCollection
-    private List<String> recurrenceDays;
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "recurring_task_recurrence_days", 
+                    joinColumns = @JoinColumn(name = "recurring_task_uuid"))
+    private Set<String> recurrenceDays = new HashSet<>();
 
-    @ElementCollection
-    private List<Date> doneDates;
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "recurring_task_done_dates", 
+                    joinColumns = @JoinColumn(name = "recurring_task_uuid"))
+    private Set<Date> doneDates = new HashSet<>();
 
     @JsonBackReference
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
 
@@ -48,6 +57,9 @@ public class RecurringTask extends AbstractTask {
     @Override
     public void markCompleted() {
         super.markCompleted();
-        this.doneDates.add(new Date());
+        if (doneDates == null) {
+            doneDates = new HashSet<>();
+        }
+        doneDates.add(new Date());
     }
 }
